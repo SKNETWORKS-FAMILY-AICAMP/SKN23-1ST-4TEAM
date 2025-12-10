@@ -35,17 +35,17 @@ def get_regist_monthly():
 regist_result = get_regist_monthly()
 
 # 이번달 리콜 수
-recall_result = get_recall_monthly()
+# recall_result = get_recall_monthly()
 
-recall_data = []
-for i in recall_result:
-    if i['month'] == '2025-09':
-        recall_data.append(i['recall_count'])
-    elif i['month'] == '2025-10':
-        recall_data.append(i['recall_count'])
+# recall_data = []
+# for i in recall_result:
+#     if i['month'] == '2025-09':
+#         recall_data.append(i['recall_count'])
+#     elif i['month'] == '2025-10':
+#         recall_data.append(i['recall_count'])
 
-rate = calculate_growth_rate(recall_data[0], recall_data[1])
-recall_data.append(rate)
+# rate = calculate_growth_rate(recall_data[0], recall_data[1])
+# recall_data.append(rate)
 
 # 리콜 목록 조회
 k_recall_result = get_recall_list(5, 1, '국내')
@@ -78,7 +78,8 @@ def render():
         create_summary_card("이번 달 신규 등록", regist_result)
 
     with col2:
-        create_summary_card("이번 달 리콜 수", recall_data)
+        create_summary_card("이번 달 신규 등록", regist_result)
+        # create_summary_card("이번 달 리콜 수", recall_data)
 
     # with col3:
     #     create_summary_card("우리 지역 1위 차종", summary_data["우리 지역 1위 차종"])
