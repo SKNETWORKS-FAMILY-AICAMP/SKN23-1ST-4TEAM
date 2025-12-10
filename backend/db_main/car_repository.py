@@ -1,7 +1,7 @@
 from decimal import Decimal
-from backend.utils.db_utils import fetch_one_dict
-from backend.utils.db_utils import fetch_all_dict
-from backend.utils.db_utils import fetch_dataframe
+from utils.db_utils import fetch_one_dict
+from utils.db_utils import fetch_all_dict
+from utils.db_utils import fetch_dataframe
 
 """---------------------------------------------------"""
 #해당 연월의 신규 등록 합계
@@ -357,8 +357,6 @@ def get_total_used_registrations(start_year, start_month, end_year, end_month):
 # V011 차량 상세 검색
 # ============================
 
-
-
 def get_vehicle_stock_search(
     year=None,
     month=None,
@@ -371,30 +369,8 @@ def get_vehicle_stock_search(
 ):
     """
     V011 - 차량 보유대 검색
-    조건이 하나도 없을 때 → 전체 목록 전부 반환 (딕셔너리 형태)
+    (현재 DB 구조에서 가능한 실제 조건만 사용)
     """
-
-    # ★ 조건이 하나도 없으면 전체 데이터 반환
-    if not any([year, month, origin_type, sido_id, vehicle_kind, usage_type]):
-        all_query = """
-            SELECT 
-                f.year,
-                f.month,
-                f.origin_type,
-                s.sido_name,
-                f.vehicle_kind,
-                f.usage_type,
-                f.stock_count
-            FROM fact_vehicle_stock f
-            LEFT JOIN dim_region_sido s
-                ON f.sido_id = s.sido_id
-            ORDER BY f.year DESC, f.month DESC, s.sido_name
-        """
-        return fetch_all_dict(all_query)   # ← DataFrame 대신 dict 반환
-
-    # ===========================
-    # ▼ 조건 검색
-    # ===========================
 
     query = """
         SELECT 
@@ -440,4 +416,4 @@ def get_vehicle_stock_search(
     query += " ORDER BY f.year DESC, f.month DESC LIMIT %s OFFSET %s"
     params.extend([limit, offset])
 
-    return fetch_all_dict(query, params)
+    return fetch_dataframe(query, params)
