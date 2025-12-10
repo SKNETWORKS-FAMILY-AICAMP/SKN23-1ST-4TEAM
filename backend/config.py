@@ -9,9 +9,8 @@
 
 ## 📌 Database Settings
 - HOST: skn23-1st-4team.cr6u26mg6lbq.eu-north-1.rds.amazonaws.com
-- USER: <입력>
-- PASSWORD: <입력>
-- DATABASE: <입력>
+- USER: admin
+- PASSWORD: (프로젝트)
 - PORT: 3306
 
 # SSH SQL 터미널 설정
