@@ -4,7 +4,7 @@ from sshtunnel import SSHTunnelForwarder
 
 SSH_HOST = "ec2-13-61-174-247.eu-north-1.compute.amazonaws.com"
 SSH_USER = "ec2-user"
-SSH_KEY = "/Users/jy/.ssh/SKN.pem"
+SSH_KEY = "/Users/jy/.ssh/SKN.pem"   #개인마다 SSH_key 경로 설정
 
 RDS_HOST = "skn23-1st-4team.cr6u26mg6lbq.eu-north-1.rds.amazonaws.com"
 RDS_PORT = 3306
