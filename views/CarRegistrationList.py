@@ -1,6 +1,23 @@
 import streamlit as st
 import pandas as pd
 
+from backend.db_main.flow_repository import get_vehicle_flow_summary_by_region
+
+rows = {
+    "등록년월": [],
+    "지역": [],
+    "차량종류": [],
+    "등록대수": []
+}
+
+result = get_vehicle_flow_summary_by_region()
+
+for row in result:
+    rows['등록년월'].append(f"{row['year']}년 {row['month']}월")
+    rows['지역'].append(row['sido_name'])
+    rows['차량종류'].append(row['vehicle_kind'])
+    rows['등록대수'].append(format(row['total_flow_count'], ','))
+
 def render():
     # -------------------------
     # 기본 설정
@@ -31,21 +48,7 @@ def render():
         with col6:
             submit_btn = st.form_submit_button("검색")
 
-    # st.divider()
-
-    # -------------------------
-    # 더미 데이터
-    # -------------------------
-    data = {
-        "번호": list(range(1, 51)),
-        "지역": ["서울특별시", "경기도", "부산광역시", "인천광역시", "대구광역시"] * 10,
-        "차종": ["현대 그랜저", "기아 K5", "현대 소나타", "BMW 5시리즈", "기아 스포티지"] * 10,
-        "등록유형": ["신규", "이전", "상속", "증여", "신규"] * 10,
-        "등록일": ["2025-12-07"] * 50,
-        "등록 대수": [177,193,22,161,34,90,27,179,128,159] * 5
-    }
-
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(rows)
 
     # -------------------------
     # 상단 요약 + 정렬

@@ -2,7 +2,25 @@ import streamlit as st
 import pandas as pd
 
 from backend.db_main.recall_repository import get_recall_list
+from backend.db_main.flow_repository import get_vehicle_flow_summary_by_region
 
+# 등록현황
+rows = {
+    "등록년월": [],
+    "지역": [],
+    "차량종류": [],
+    "등록대수": []
+}
+
+result = get_vehicle_flow_summary_by_region(5)
+
+for row in result:
+    rows['등록년월'].append(f"{row['year']}년 {row['month']}월")
+    rows['지역'].append(row['sido_name'])
+    rows['차량종류'].append(row['vehicle_kind'])
+    rows['등록대수'].append(format(row['total_flow_count'], ','))
+
+# 리콜
 k_recall_result = get_recall_list(5, 1, '국내')
 o_recall_result = get_recall_list(5, 1, '해외')
 
@@ -21,15 +39,7 @@ def render():
             unsafe_allow_html=True
         )
 
-        # 데이터 준비 (이미지에 맞게 더미 데이터 생성)
-        data = {
-            '지역': ['서울특별시', '경기도', '부산광역시', '인천광역시', '대구광역시'],
-            '차종': ['현대 그랜저', '기아 K3', '현대 소나타', 'BMW 5시리즈', '기아 스포티지'],
-            '등록유형': ['신규', '이전', '상속', '신규', '증여'],
-            '날짜': ['2025-12-07', '2025-12-07', '2025-12-06', '2025-12-06', '2025-12-05'],
-            '대수': ['145대', '234대', '23대', '67대', '18대']
-        }
-        df = pd.DataFrame(data)
+        df = pd.DataFrame(rows)
 
         # Streamlit 데이터프레임/테이블 표시
         # 이미지와 유사하게 인덱스 없이 깔끔하게 표시
