@@ -4,23 +4,31 @@ from backend.utils.db_utils import fetch_all_dict
 # ============================================================
 # R001 - 최신 리콜 목록 조회
 # ============================================================
-def get_recall_list(limit=100,page_num=0):
+def get_recall_list(limit=100, page_num=0, origin_type=None):
     offset = limit * page_num
 
-    """
-    최신 리콜 목록 조회 (딕셔너리 리스트 반환)
-    """
+    # 국내/해외 매핑 (국내 = 현대+기아)
+    domestic_brands = ['기아 주식회사', '현대자동차(주)']
+
     query = """
-        SELECT 
-            recall_id,
-            car_name,
-            remedy_method,
-            recall_date
+        SELECT recall_id, car_name, remedy_method, recall_date, maker_name
         FROM fact_recall
-        ORDER BY recall_date DESC
-        LIMIT %s OFFSET %s;
+        WHERE 1=1
     """
-    return fetch_all_dict(query, (limit,offset))
+    params = []
+
+    if origin_type == "국내":
+        query += " AND maker_name IN (%s, %s)"
+        params.extend(domestic_brands)
+
+    elif origin_type == "해외":
+        query += " AND maker_name NOT IN (%s, %s)"
+        params.extend(domestic_brands)
+
+    query += " ORDER BY recall_date DESC LIMIT %s OFFSET %s"
+    params.extend([limit, offset])
+
+    return fetch_all_dict(query, params)
 
 
 # ============================================================

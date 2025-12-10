@@ -11,7 +11,7 @@ from backend.db_main.recall_repository import (
 
 
 print("\n===== 최신 리콜 목록 (limit=5) =====")
-rows = get_recall_list(5,0)
+rows = get_recall_list(5,0,"해외")
 print(rows)
 
 print("\n===== 제조사별 리콜 건수 =====")
