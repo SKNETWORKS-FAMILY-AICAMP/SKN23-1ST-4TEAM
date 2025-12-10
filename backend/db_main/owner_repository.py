@@ -1,6 +1,10 @@
 from decimal import Decimal
 from backend.utils.db_utils import fetch_all_dict
 from backend.utils.db_utils import fetch_one_dict
+
+# ============================================================
+# O001 - 연령대별 차량 소유자 수
+# ============================================================
 def get_owner_count_by_age(conn, year: int, month: int):
     query = """
         SELECT
@@ -38,38 +42,11 @@ def get_owner_count_by_age(conn, year: int, month: int):
 
     return {"year": year, "month": month, "items": processed, "total": total}
 
-"""--------------------------------------------------"""
 
 
-
-def get_owner_count_by_region(year: int, month: int):
-    """
-    O004 – 지역별 소유자 분포
-    """
-
-    query = """
-        SELECT 
-            s.sido_name AS region,
-            COUNT(*) AS owner_count
-        FROM fact_owner_demo_stock f
-        JOIN dim_region_sido s
-            ON f.sido_id = s.sido_id
-        WHERE f.year = %s
-          AND f.month = %s
-        GROUP BY s.sido_name
-        ORDER BY owner_count DESC;
-    """
-
-    rows = fetch_all_dict(query, (year, month))
-
-    return [
-        {"region": r["region"], "count": int(r["owner_count"])}
-        for r in rows
-    ]
-
-"""--------------------------------------------------"""
-
-
+# ============================================================
+# O002 성별 소유자 수 집계
+# ============================================================
 
 
 def get_owner_count_by_gender(year: int, month: int):
@@ -96,10 +73,10 @@ def get_owner_count_by_gender(year: int, month: int):
         }
         for r in rows
     ]
-"""--------------------------------------------------"""
 
-
-
+# ============================================================
+# O003 상속/증여 분석 
+# ============================================================
 
 def get_inheritance_gift_top3_regions():
     """
@@ -179,30 +156,43 @@ def get_inheritance_gift_top3_regions():
         else:
             rate = round((curr_count - prev_count) / prev_count * 100, 1)
 
-        # 최빈 연령대
-        age_group_query = """
-            SELECT 
-                g.age_group,
-                COUNT(*) AS cnt
-            FROM fact_owner_demo_stock o
-            LEFT JOIN dim_region_sido s ON o.sido_id = s.sido_id
-            LEFT JOIN dim_age_group g ON o.age_group_id = g.age_group_id
-            WHERE o.year = %s
-            AND o.month = %s
-            AND s.sido_name = %s
-            GROUP BY g.age_group
-            ORDER BY cnt DESC
-            LIMIT 1;
-        """
-        age = fetch_one_dict(age_group_query, (sido_name,))
-        top_age_group = age["age_group"] if age else "정보 없음"
+        
 
         # 결과 누적
         results.append({
             "region": sido_name,
             "count": curr_count,
             "rate": rate,
-            "age_group": top_age_group
+            
         })
-
     return results
+
+
+# ============================================================
+# O004 지역별 소유자 분포
+# ============================================================
+
+def get_owner_count_by_region(year: int, month: int):
+    """
+    O004 – 지역별 소유자 분포
+    """
+
+    query = """
+        SELECT 
+            s.sido_name AS region,
+            COUNT(*) AS owner_count
+        FROM fact_owner_demo_stock f
+        JOIN dim_region_sido s
+            ON f.sido_id = s.sido_id
+        WHERE f.year = %s
+          AND f.month = %s
+        GROUP BY s.sido_name
+        ORDER BY owner_count DESC;
+    """
+
+    rows = fetch_all_dict(query, (year, month))
+
+    return [
+        {"region": r["region"], "count": int(r["owner_count"])}
+        for r in rows
+    ]
