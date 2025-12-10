@@ -36,21 +36,21 @@ def render():
         st.dataframe(df, hide_index=True, use_container_width=True)
 
     ## 2. 국내/해외 리콜 정보 (Domestic/Foreign Recall Information)
-
-    # 리콜 카드 생성 함수
     def create_recall_card(row):
         st.markdown(
             f"""
             <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 10px; line-height: 1.5;">
-                <p style="margin: 0; font-weight: bold;">{row['maker_name']}</p>
+                <div>
+                    <b style="margin: 0;">{row['maker_name']}</b>
+                    <span style="float: right; margin-right: 6px;">시행일자: {row['fix_start_date']}</span>
+                </div>
                 <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #555;">{row['car_name']}</p>
-                <p style="margin: 5px 0 0 0; font-size: 0.9em;">{row['remedy_method']}</p>
+                <p style="margin: 5px 0 0 0; font-size: 0.9em; min-height: 43px; overflow: hidden;text-overflow: ellipsis;display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;">{row['remedy_method']}</p>
             </div>
             """,
             unsafe_allow_html=True
         )
 
-    # 2-컬럼 레이아웃 생성
     col_domestic, col_foreign = st.columns(2)
 
     # 국내 리콜 정보
@@ -59,7 +59,7 @@ def render():
             """
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h5 style="margin: 0; padding: 0;">⚠️ 국내 리콜</h5>
-                <a href="#" style="text-decoration: none; color: #165DFB ;">전체 보기 →</a>
+                <a href="#" on_click={} style="text-decoration: none; color: #165DFB ;">전체 보기 →</a>
             </div>
             """,
             unsafe_allow_html=True

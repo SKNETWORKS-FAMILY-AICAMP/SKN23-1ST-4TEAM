@@ -2,7 +2,7 @@ import streamlit as st
 
 from backend.db_main.recall_repository import get_recall_list
 
-page = 1
+page = 0
 list_count = 10
 
 result = get_recall_list(list_count, page)
