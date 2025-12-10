@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import altair as alt
-
+import plotly.express as px
+import json
 from backend.db_main.database import get_connection
 from backend.db_main.recall_repository import get_recall_list, get_recall_monthly
 from backend.db_main.car_repository import get_total_new_registrations, get_total_used_registrations, get_monthly_registration_trend, get_region_ranking
@@ -112,6 +112,17 @@ recall_data.append(rate)
 # 월별 등록 차트
 monthly_chart_result = make_regist_chart_data()
 
+# 광역시도별 지도 차트
+region_map_data = {}
+df = pd.DataFrame({
+    "region": list(region_map_data.keys()),
+    "value": list(region_map_data.values())
+})
+
+with open("./assets/korea_sido_wgs84.geojson", encoding="utf-8") as f:
+    korea_geo = json.load(f)
+
+
 # 지역별 등록 차트
 region_chart_result = make_region_chart_data()
 
@@ -182,37 +193,55 @@ def render():
 
     ### 지역별 신규 등록 현황
     with chart_col2:
-        st.markdown("<h5 style='margin: 0; padding: 0;'>지역별 신규 등록 현황</h5>", unsafe_allow_html=True)
+        fig = px.choropleth(
+            df,
+            geojson=korea_geo,
+            locations="region",
+            featureidkey="properties.CTP_KOR_NM",
+            color="value",
+            hover_name="region",
+            hover_data={"value": True},
+            color_continuous_scale="Blues"
+        )
 
-        print(f"지역 리스트 길이: {len(region_chart_result[0])}")
-        print(f"신규 등록 리스트 길이: {len(region_chart_result[1])}")
-        print(f"중고 등록 리스트 길이: {len(region_chart_result[2])}")
+        fig.update_geos(fitbounds="locations", visible=True)
 
-        regional_df = pd.DataFrame({
-            '지역': region_chart_result[0],
-            '신규 등록': region_chart_result[1],
-            '중고 등록': region_chart_result[2]
-        })
+        # Streamlit에 표시
+        st.plotly_chart(fig, use_container_width=True)
+
+
+
+        # st.markdown("<h5 style='margin: 0; padding: 0;'>지역별 신규 등록 현황</h5>", unsafe_allow_html=True)
+
+        # print(f"지역 리스트 길이: {len(region_chart_result[0])}")
+        # print(f"신규 등록 리스트 길이: {len(region_chart_result[1])}")
+        # print(f"중고 등록 리스트 길이: {len(region_chart_result[2])}")
+
+        # regional_df = pd.DataFrame({
+        #     '지역': region_chart_result[0],
+        #     '신규 등록': region_chart_result[1],
+        #     '중고 등록': region_chart_result[2]
+        # })
         
-        long_df = pd.melt(
-            regional_df,
-            id_vars=['지역'],
-            value_vars=['신규 등록', '중고 등록'],
-            var_name='등록 구분',
-            value_name='등록 대수'
-        )
-        base = alt.Chart(long_df).encode(
-            x=alt.X('지역', sort=region_chart_result[0]), # 지역 순서 유지
-            y=alt.Y('등록 대수', title='등록 대수'),
-            color='등록 구분',
-            tooltip=['지역', '등록 구분', '등록 대수']
-        )
-        chart = base.mark_bar().encode(
-            x=alt.X('등록 구분', axis=None), # x축에는 등록 구분 이름을 숨깁니다.
-            column=alt.Column('지역', header=alt.Header(titleOrient="bottom", labelOrient="bottom")), # 지역별로 분리
-        )
+        # long_df = pd.melt(
+        #     regional_df,
+        #     id_vars=['지역'],
+        #     value_vars=['신규 등록', '중고 등록'],
+        #     var_name='등록 구분',
+        #     value_name='등록 대수'
+        # )
+        # base = alt.Chart(long_df).encode(
+        #     x=alt.X('지역', sort=region_chart_result[0]), # 지역 순서 유지
+        #     y=alt.Y('등록 대수', title='등록 대수'),
+        #     color='등록 구분',
+        #     tooltip=['지역', '등록 구분', '등록 대수']
+        # )
+        # chart = base.mark_bar().encode(
+        #     x=alt.X('등록 구분', axis=None), # x축에는 등록 구분 이름을 숨깁니다.
+        #     column=alt.Column('지역', header=alt.Header(titleOrient="bottom", labelOrient="bottom")), # 지역별로 분리
+        # )
 
-        st.altair_chart(chart, use_container_width=True)
+        # st.altair_chart(chart, use_container_width=True)
 
     ## 3. 상속/증여 등록 특징 (Inheritance/Gift Registration Features)
 
