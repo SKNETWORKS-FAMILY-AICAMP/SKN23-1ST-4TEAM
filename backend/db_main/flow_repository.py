@@ -68,10 +68,10 @@ def get_inheritance_gift_count(year: int, month: int, region: str = None):
 def get_vehicle_flow_summary_by_region(limit=100, offset=0):
     """
     V008 - 지역별 연월 차량 등록 현황 요약
-    fact_flow_count + dim_region_sido 조인
-    year/month/sido_name/vehicle_kind 별 flow_count 집계
+    + 전체 데이터 개수(total_count) 포함
     """
 
+    # 1) LIMIT/OFFSET 데이터 조회
     query = """
         SELECT 
             f.year,
@@ -90,8 +90,21 @@ def get_vehicle_flow_summary_by_region(limit=100, offset=0):
 
     rows = fetch_all_dict(query, (limit, offset))
 
-    # int 변환
     for r in rows:
         r["total_flow_count"] = int(r["total_flow_count"])
 
-    return rows
+    # 2) 전체 row 개수 조회
+    count_query = """
+        SELECT COUNT(*) AS total
+        FROM fact_flow_count f
+        LEFT JOIN dim_region_sido s
+            ON f.sido_id = s.sido_id
+        WHERE f.vehicle_kind NOT IN ('None', '합계', 'nan');
+    """
+
+    total = fetch_one_dict(count_query)["total"]
+
+    return {
+        "total_count": int(total),   # 전체 데이터 개수
+        "rows": rows                 # LIMIT/OFFSET된 데이터
+    }
