@@ -1,16 +1,26 @@
 import streamlit as st
-import pandas as pd
+
+from backend.db_main.recall_repository import get_recall_list
+
+page = 1
+list_count = 10
+
+result = get_recall_list(list_count, page)
+
+# 더보기
+def click_more_btn():
+    global page, list_count
+
+    page += 1
+    add_data = get_recall_list(list_count, page)
+    result.extend(add_data)
+
 
 def render():
-    # -------------------------
-    # 기본 설정
-    # -------------------------
     st.markdown("<h2>리콜 목록</h2>", unsafe_allow_html=True)
     st.markdown("<p style='color:gray;'>리콜 정보를 확인하고 조치 방법을 안내받으세요.</p>", unsafe_allow_html=True)
 
-    # -------------------------
-    # 검색 바 UI
-    # -------------------------
+    # 검색 바 UI -------------------------
     with st.form("search_form"):
         col1, col2, col3, col4, col5, col6 = st.columns([1.2, 1.2, 1.2, 1.2, 3, 1])
 
@@ -31,56 +41,35 @@ def render():
         with col6:
             submit_btn = st.form_submit_button("검색")
 
-    # st.divider()
-
-    # -------------------------
-    # 더미 데이터
-    # -------------------------
-    data = {
-        "번호": list(range(1, 51)),
-        "지역": ["서울특별시", "경기도", "부산광역시", "인천광역시", "대구광역시"] * 10,
-        "차종": ["현대 그랜저", "기아 K5", "현대 소나타", "BMW 5시리즈", "기아 스포티지"] * 10,
-        "등록유형": ["신규", "이전", "상속", "증여", "신규"] * 10,
-        "등록일": ["2025-12-07"] * 50,
-        "등록 대수": [177,193,22,161,34,90,27,179,128,159] * 5
-    }
-
-    df = pd.DataFrame(data)
-
     # -------------------------
     # 상단 요약 + 정렬
     # -------------------------
     left, right = st.columns([7, 2])
 
     with left:
-        st.markdown(f"<p>총 <b>{len(df)}</b>건의 리콜 정보</p>", unsafe_allow_html=True)
+        st.markdown(f"<p>총 <b>{len(result)}</b>건의 리콜 정보</p>", unsafe_allow_html=True)
 
     with right:
         sort_opt = st.selectbox(" ", ["정렬 기준 선택", "등록일 최신순", "등록 대수 많은순"], label_visibility="collapsed")
 
-    # -------------------------
-    # 테이블 출력
-    # -------------------------
-    st.dataframe(
-        df,
-        use_container_width=True,
-        hide_index=True
-    )
+    # 리콜 카드 생성 함수
+    def create_recall_card(row):
+        st.markdown(
+            f"""
+            <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 10px; line-height: 1.5;">
+                <div>
+                    <b style="margin: 0; font-weight: bold;">{row['maker_name']}</b>
+                    <span style="float: right; margin-right: 6px;">시행일자: {row['fix_start_date']}</span>
+                </div>
+                <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #555;">{row['car_name']}</p>
+                <p style="margin: 5px 0 0 0; font-size: 0.9em;">{row['remedy_method']}</p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-    # -------------------------
-    # 페이지네이션 UI
-    # -------------------------
-    st.markdown(
-        """
-        <div style='text-align:center; margin-top:20px;'>
-            <button style='padding: 4px 12px;border-radius: 4px;border: 1px solid #F7F7F7;background-color: #fff;'>‹</button>
-            <button style='padding: 4px 12px;border-radius: 4px;border: 1px solid #F7F7F7;background-color: #fff;'>1</button>
-            <button style='padding: 4px 12px;border-radius: 4px;border: 1px solid #F7F7F7;background-color: #fff;'>2</button>
-            <button style='padding: 4px 12px;border-radius: 4px;border: 1px solid #F7F7F7;background-color: #fff;'>3</button>
-            <button style='padding: 4px 12px;border-radius: 4px;border: 1px solid #F7F7F7;background-color: #fff;'>4</button>
-            <button style='padding: 4px 12px;border-radius: 4px;border: 1px solid #F7F7F7;background-color: #fff;'>5</button>
-            <button style='padding: 4px 12px;border-radius: 4px;border: 1px solid #F7F7F7;background-color: #fff;'>›</button>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    for row in result:
+        create_recall_card(row)
+
+    # 더보기 버튼
+    st.button("더보기", on_click=click_more_btn)
