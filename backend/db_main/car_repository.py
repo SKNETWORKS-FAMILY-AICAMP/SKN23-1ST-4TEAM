@@ -1,6 +1,7 @@
 from decimal import Decimal
 from utils.db_utils import fetch_one_dict
 from utils.db_utils import fetch_all_dict
+from utils.db_utils import fetch_dataframe
 
 """---------------------------------------------------"""
 #해당 연월의 신규 등록 합계
@@ -277,63 +278,142 @@ def get_vehicle_count_by_region(year, month, region_name=None):
 
 """---------------------------------------"""
 
-def get_vehicle_list(search_type, flow_type, year, month, vehicle=None, region=None):
-    query = """
-        SELECT
-            s.sido_name AS region,
-            v.vehicle_kind,
-            f.flow_type,
-            f.year,
-            f.month,
-            f.flow_count AS count
-        FROM fact_flow_count f
-        JOIN dim_region_sido s ON f.sido_id = s.sido_id
-        JOIN dim_vehicle_kind v ON f.vehicle_kind_id = v.vehicle_kind_id
-        WHERE f.year = %s
-          AND f.month = %s
-          AND f.flow_type = %s
+
+
+def get_total_new_registrations(start_year, start_month, end_year, end_month):
     """
-    
-    params = [year, month, flow_type]
+    D001 - 기간별 신규 등록 총합 조회
+    기간(start_year/start_month) ~ (end_year/end_month)
+    """
+    query = """
+        SELECT 
+            SUM(flow_count) AS total_new
+        FROM fact_flow_count
+        WHERE 
+            flow_type = '신규'
+            AND (year > %s OR (year = %s AND month >= %s))
+            AND (year < %s OR (year = %s AND month <= %s));
+    """
 
-    # 🔹 차량 종류 필터
-    if vehicle:
-        if isinstance(vehicle, list):
-            query += " AND v.vehicle_kind IN (" + ",".join(["%s"] * len(vehicle)) + ")"
-            params.extend(vehicle)
-        else:
-            query += " AND v.vehicle_kind = %s"
-            params.append(vehicle)
+    params = (
+        start_year, start_year, start_month,
+        end_year, end_year, end_month
+    )
 
-    # 🔹 지역 필터
-    if region:
-        if isinstance(region, list):
-            query += " AND s.sido_name IN (" + ",".join(["%s"] * len(region)) + ")"
-            params.extend(region)
-        else:
-            query += " AND s.sido_name = %s"
-            params.append(region)
+    result = fetch_one_dict(query, params)
+    value = result["total_new"]
 
-    # 🔹 목록 타입 결정
-    if search_type == "region":
-        query += " ORDER BY s.sido_name, v.vehicle_kind"
-    elif search_type == "vehicle_kind":
-        query += " ORDER BY v.vehicle_kind, s.sido_name"
-    else:
-        raise ValueError("search_type must be 'region' or 'vehicle_kind'")
-
-    rows = fetch_all_dict(query, params)
-
-    # 숫자 변환
-    for row in rows:
-        row["count"] = int(row["count"])
+    if isinstance(value, Decimal):
+        value = int(value)
 
     return {
-        "year": year,
-        "month": month,
-        "search_type": search_type,
-        "items": rows
+        "start": f"{start_year}-{start_month}",
+        "end": f"{end_year}-{end_month}",
+        "total_new": value
     }
 
 
 """---------------------------------------"""
+
+def get_total_used_registrations(start_year, start_month, end_year, end_month):
+    """
+    D002 - 기간별 중고(이전) 등록 합계 조회
+    신규/말소 제외 = 모두 중고
+    """
+    
+    query = """
+        SELECT 
+            SUM(flow_count) AS total_used
+        FROM fact_flow_count
+        WHERE 
+            flow_type NOT IN ('신규', '말소')
+            AND (year > %s OR (year = %s AND month >= %s))
+            AND (year < %s OR (year = %s AND month <= %s));
+    """
+
+    params = (
+        start_year, start_year, start_month,
+        end_year, end_year, end_month
+    )
+
+    row = fetch_one_dict(query, params)
+    value = row["total_used"]
+
+    if value is None:
+        value = 0
+
+    if isinstance(value, Decimal):
+        value = int(value)
+
+    return {
+        "start": f"{start_year}-{start_month}",
+        "end": f"{end_year}-{end_month}",
+        "total_used": value
+    }
+
+
+
+# ============================
+# V011 차량 상세 검색
+# ============================
+
+def get_vehicle_stock_search(
+    year=None,
+    month=None,
+    origin_type=None,
+    sido_id=None,
+    vehicle_kind=None,
+    usage_type=None,
+    limit=100,
+    offset=0
+):
+    """
+    V011 - 차량 보유대 검색
+    (현재 DB 구조에서 가능한 실제 조건만 사용)
+    """
+
+    query = """
+        SELECT 
+            f.year,
+            f.month,
+            f.origin_type,
+            s.sido_name,
+            f.vehicle_kind,
+            f.usage_type,
+            f.stock_count
+        FROM fact_vehicle_stock f
+        LEFT JOIN dim_region_sido s
+            ON f.sido_id = s.sido_id
+        WHERE 1=1
+    """
+
+    params = []
+
+    if year:
+        query += " AND f.year = %s"
+        params.append(year)
+
+    if month:
+        query += " AND f.month = %s"
+        params.append(month)
+
+    if origin_type:
+        query += " AND f.origin_type = %s"
+        params.append(origin_type)
+
+    if sido_id:
+        query += " AND f.sido_id = %s"
+        params.append(sido_id)
+
+    if vehicle_kind:
+        query += " AND f.vehicle_kind = %s"
+        params.append(vehicle_kind)
+
+    if usage_type:
+        query += " AND f.usage_type = %s"
+        params.append(usage_type)
+
+    query += " ORDER BY f.year DESC, f.month DESC LIMIT %s OFFSET %s"
+    params.extend([limit, offset])
+
+    return fetch_dataframe(query, params)
