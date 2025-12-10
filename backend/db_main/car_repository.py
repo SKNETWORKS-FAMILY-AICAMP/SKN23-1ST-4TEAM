@@ -2,8 +2,11 @@ from decimal import Decimal
 from backend.utils.db_utils import fetch_one_dict
 from backend.utils.db_utils import fetch_all_dict
 
-"""---------------------------------------------------"""
-#해당 연월의 신규 등록 합계
+
+# ============================================================
+#  V001 - 전국)해당 연월의 신규 등록 합계
+# ============================================================
+
 def get_new_vehicle_count(year, month):
     query = """
         SELECT 
@@ -24,8 +27,11 @@ def get_new_vehicle_count(year, month):
         value = int(value)
 
     return value
-"""---------------------------------------------------"""
-#차종별 보유수 
+
+# ============================================================
+#  V004-지역->전국:차종별 보유수(승용/승합/화물 등)
+# ============================================================
+ 
 def get_vehicle_count_by_type(conn, year, month):
     
     # ------------------------------
@@ -85,18 +91,25 @@ def get_vehicle_count_by_type(conn, year, month):
         "items": region_rows,   # 시도별 차종별 보유수
         "total": total_rows     # 전국 차종별 총합
     }
-"""-----------------------------------"""
+# ============================================================
+#  D004 - 연간 월별 등록 추이(신규/중고)
+# ============================================================
+ 
 
-def get_monthly_registration_trend(conn, year, flow_type):
-    # flow_type -> DB flow_type 매핑
+def get_monthly_registration_trend(year, flow_type):
+    """
+    월별 신규/중고 등록 수 조회 
+    """
+
+    # flow_type 매핑
     if flow_type == "신규":
         flow_list = ["신규"]
     elif flow_type == "중고":
-        flow_list = ["이전", "변경"]  # 말소(X)
+        flow_list = ["이전", "변경"]    # 말소 제외
     else:
         raise ValueError("flow_type must be '신규' or '중고'")
 
-    # SQL IN (%s, %s…) 만들기
+    # SQL IN (%s,%s)
     placeholders = ",".join(["%s"] * len(flow_list))
 
     query = f"""
@@ -112,10 +125,7 @@ def get_monthly_registration_trend(conn, year, flow_type):
     """
 
     params = [year] + flow_list
-
-    with conn.cursor() as cursor:
-        cursor.execute(query, params)
-        rows = cursor.fetchall()
+    rows = fetch_all_dict(query, params)
 
     # 결과 정리
     monthly_list = []
@@ -123,12 +133,10 @@ def get_monthly_registration_trend(conn, year, flow_type):
 
     for row in rows:
         count = int(row["count"]) if row["count"] else 0
-
         monthly_list.append({
             "month": row["month"],
             "count": count
         })
-
         total += count
 
     return {
@@ -138,12 +146,12 @@ def get_monthly_registration_trend(conn, year, flow_type):
         "total": total
     }
 
-"""-------------------------------------------------"""
+# ============================================================
+#  D005 - 지역별 등록 상위 N개(신규/중고)
+# ============================================================
+ 
 
-def get_region_ranking(conn, year, month, flow_type, top_n=10):
-    """
-    지역별 신규/중고 등록 수 TOP N 조회
-    """
+def get_region_ranking(year, month, flow_type, top_n=10):
 
     # flow_type 분리
     if flow_type == "신규":
@@ -152,8 +160,6 @@ def get_region_ranking(conn, year, month, flow_type, top_n=10):
         flow_filter = ["이전", "변경"]
     else:
         raise ValueError("flow_type must be '신규' or '중고'")
-
-    # (%s,%s) 자동 생성
     placeholders = ",".join(["%s"] * len(flow_filter))
 
     query = f"""
@@ -173,24 +179,24 @@ def get_region_ranking(conn, year, month, flow_type, top_n=10):
 
     params = [year, month] + flow_filter + [top_n]
 
-    with conn.cursor() as cursor:
-        cursor.execute(query, params)
-        rows = cursor.fetchall()
+    rows = fetch_all_dict(query, params)
 
-    # 결과 변환
-    ranking = [
-        {"sido_name": row["sido_name"], "count": int(row["count"])}
-        for row in rows
-    ]
+    # int 변환
+    for row in rows:
+        row["count"] = int(row["count"])
 
     return {
         "year": year,
         "month": month,
         "flow_type": flow_type,
         "top_n": top_n,
-        "ranking": ranking
+        "ranking": rows
     }
-"""----------------------------------"""
+# ============================================================
+#  V005 - 연료별 보유수(전기/휘발유 등)
+# ============================================================
+ 
+
 def get_vehicle_count_by_fuel(year, month):
     query = """
         SELECT 
@@ -218,12 +224,13 @@ def get_vehicle_count_by_fuel(year, month):
         "month": month,
         "items": rows
     }
-"""---------------------------------------"""
+# ============================================================
+#  V006 - 지역별 보유수(지역 검색 가능)
+# ============================================================
+ 
 def get_vehicle_count_by_region(year, month, region_name=None):
     
-    # ======================================
-    # 1) region_name 없으면 전체 조회
-    # ======================================
+    # 1) region_name 없으면 전체 조회 
     if region_name is None:
         query = """
             SELECT 
@@ -274,11 +281,10 @@ def get_vehicle_count_by_region(year, month, region_name=None):
         "month": month,
         "item": result
     }
-
-"""---------------------------------------"""
-
-
-
+# ============================================================
+#  D001 - 해당 기간 신규 등록 차량 합계
+# ============================================================
+ 
 def get_total_new_registrations(start_year, start_month, end_year, end_month):
     """
     D001 - 기간별 신규 등록 총합 조회
@@ -311,9 +317,10 @@ def get_total_new_registrations(start_year, start_month, end_year, end_month):
         "total_new": value
     }
 
-
-"""---------------------------------------"""
-
+# ============================================================
+#  D002 - 해당 기간 중고(이전) 등록 합계
+# ============================================================
+ 
 def get_total_used_registrations(start_year, start_month, end_year, end_month):
     """
     D002 - 기간별 중고(이전) 등록 합계 조회
@@ -353,12 +360,10 @@ def get_total_used_registrations(start_year, start_month, end_year, end_month):
 
 
 
-# ============================
-# V007 차량 용도별 검색
-# ============================
-
-from backend.utils.db_utils import fetch_all_dict
-
+# ============================================================
+#  V007 - 용도(관용/ 자가용/ 영업용)별 집계
+# ============================================================
+ 
 def get_vehicle_count_by_category(year: int, month: int):
     """
     V007 - 용도별 차량 보유대 집계 (관용/자가용/영업용)
@@ -387,13 +392,10 @@ def get_vehicle_count_by_category(year: int, month: int):
         for r in rows
     ]
 
-
-# ============================
-# V011 차량 상세 검색
-# ============================
-
-
-
+# ============================================================
+#  V011 - 차량 상세 검색
+# ============================================================
+ 
 def get_vehicle_stock_search(
     year=None,
     month=None,
@@ -432,7 +434,7 @@ def get_vehicle_stock_search(
     # ▼ 조건 검색
     # ===========================
 
-    query = """
+    query = """                                     
         SELECT 
             f.year,
             f.month,
