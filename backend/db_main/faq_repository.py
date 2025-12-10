@@ -1,5 +1,5 @@
 # FAQ DB 불러오기
-def get_all_faq(limit=200):
+def get_all_faq(limit=300):
     query = """
         SELECT *
         FROM fact_faq
