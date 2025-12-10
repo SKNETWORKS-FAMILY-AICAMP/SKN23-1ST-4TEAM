@@ -1,9 +1,11 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import altair as alt
 
+from backend.db_main.database import get_connection
 from backend.db_main.recall_repository import get_recall_list, get_recall_monthly
-from backend.db_main.car_repository import get_total_new_registrations
+from backend.db_main.car_repository import get_total_new_registrations, get_total_used_registrations, get_monthly_registration_trend, get_region_ranking
 
 # 증감 비율 구하기
 def calculate_growth_rate(sub_month, month):
@@ -21,9 +23,12 @@ def calculate_growth_rate(sub_month, month):
     
     return growth_rate
 
+year = 2025
+month = 10
+
+# 신규 등록
 def get_regist_monthly():
-    year = 2025
-    month = 10
+    global year, month
 
     sub = get_total_new_registrations(year, (month-1), year, (month-1))
     this = get_total_new_registrations(year, month, year, month)
@@ -31,21 +36,84 @@ def get_regist_monthly():
 
     return [sub['total_new'], this['total_new'], rate]
 
+# 중고 등록
+def get_old_monthly():
+    global year, month
+    
+    sub = get_total_used_registrations(year, (month-1), year, (month-1))
+    this = get_total_used_registrations(year, month, year, month)
+    rate = calculate_growth_rate(sub['total_used'], this['total_used'])
+
+    return [sub['total_used'], this['total_used'], rate]
+
+# 등록 차트
+def make_regist_chart_data():
+    global year
+
+    new_result = get_monthly_registration_trend(get_connection(), year, "신규")
+    old_result = get_monthly_registration_trend(get_connection(), year, "중고")
+
+    all_records = []
+
+    for item in new_result['items']:
+        # new_rows.append(item['count'])
+        all_records.append({
+            '년도': year,
+            '월': item['month'],
+            '등록 유형': "신규",
+            '등록 대수': item['count']
+        })
+
+    for item in old_result['items']:
+        # old_rows.append(item['count'])
+        all_records.append({
+            '년도': year,
+            '월': item['month'],
+            '등록 유형': "중고",
+            '등록 대수': item['count']
+        })
+
+    return all_records
+
+def make_region_chart_data():
+    global year, month
+
+    new_rows = []
+    old_rows = []
+
+    new_result = get_region_ranking(get_connection(), year, month, "신규")
+    old_result = get_region_ranking(get_connection(), year, month, "중고")
+
+    regions = [item['sido_name'] for item in new_result['ranking']]
+    new_rows = [item['count'] for item in new_result['ranking']]
+    old_rows = [item['count'] for item in old_result['ranking']]
+
+    return [regions, new_rows, old_rows]
+
 # 이번달 등록 수
 regist_result = get_regist_monthly()
 
+# 중고 등록 수
+old_result = get_old_monthly()
+
 # 이번달 리콜 수
-# recall_result = get_recall_monthly()
+recall_result = get_recall_monthly()
 
-# recall_data = []
-# for i in recall_result:
-#     if i['month'] == '2025-09':
-#         recall_data.append(i['recall_count'])
-#     elif i['month'] == '2025-10':
-#         recall_data.append(i['recall_count'])
+recall_data = []
+for i in recall_result:
+    if i['month'] == '2025-09':
+        recall_data.append(i['recall_count'])
+    elif i['month'] == '2025-10':
+        recall_data.append(i['recall_count'])
 
-# rate = calculate_growth_rate(recall_data[0], recall_data[1])
-# recall_data.append(rate)
+rate = calculate_growth_rate(recall_data[0], recall_data[1])
+recall_data.append(rate)
+
+# 월별 등록 차트
+monthly_chart_result = make_regist_chart_data()
+
+# 지역별 등록 차트
+region_chart_result = make_region_chart_data()
 
 # 리콜 목록 조회
 k_recall_result = get_recall_list(5, 1, '국내')
@@ -56,7 +124,7 @@ def render():
     st.markdown("<p style='color:gray;'>지역별 신규 등록 트렌드와 리콜 정보를 한눈에 확인하세요.</p>", unsafe_allow_html=True)
 
     ## 1. 상단 요약 카드 (Summary Cards)
-    col1, col2, _ = st.columns(3)
+    col1, col2, col3 = st.columns(3)
 
     def create_summary_card(title, data):
         change_color = "green" if data[2] > 0 else "red"
@@ -78,57 +146,73 @@ def render():
         create_summary_card("이번 달 신규 등록", regist_result)
 
     with col2:
-        create_summary_card("이번 달 신규 등록", regist_result)
-        # create_summary_card("이번 달 리콜 수", recall_data)
+        create_summary_card("이번 달 중고/이전 등록", old_result)
 
-    # with col3:
-    #     create_summary_card("우리 지역 1위 차종", summary_data["우리 지역 1위 차종"])
+    with col3:
+        create_summary_card("이번 달 리콜 등록", recall_data)
 
-    ## 2. 월별/지역별 등록 차트 (Charts)
+    ## 2. 차트
     chart_col1, chart_col2 = st.columns(2)
 
-    ### 📈 월별 신규 등록 추이
+    ### 월별 신규 등록 추이
     with chart_col1:
         st.markdown("<h5 style='margin: 0; padding: 0;'>월별 신규 자동차 등록 추이</h5>", unsafe_allow_html=True)
-        
-        # 더미 데이터 생성 (pandas 사용)
-        months = [f"{i}월" for i in range(1, 13)]
-        
-        # 전체 등록 (20,000대 근처)
-        np.random.seed(42)
-        base_registrations = np.random.randint(18000, 24000, size=12)
-        # 상속/증여 (300~1000대)
-        inheritance_registrations = np.random.randint(300, 1000, size=12)
-        
-        monthly_df = pd.DataFrame({
-            '월': months,
-            '전체 등록': base_registrations,
-            '상속/증여': inheritance_registrations
-        })
-        
-        # 월별 추이 차트 표시
-        # '월' 컬럼을 인덱스로 설정하여 차트 생성
-        monthly_df = monthly_df.set_index('월')
-        
-        # Streamlit line chart 사용
-        st.line_chart(monthly_df, height=300)
 
-    ### 📊 지역별 신규 등록 현황
+        line_chart_df = pd.DataFrame(monthly_chart_result)
+
+        # Altair 차트 정의
+        line_chart = alt.Chart(line_chart_df).mark_line(point=True).encode(
+            # X축: 월 (연속형, 월별 순서로)
+            x=alt.X('월', axis=alt.Axis(tickMinStep=1, title='월')),
+            
+            # Y축: 등록 대수
+            y=alt.Y('등록 대수', title='등록 대수'),
+            
+            # 색상: 등록 유형(신규/중고)에 따라 라인 분리
+            color='등록 유형',
+            
+            # 툴팁 추가
+            tooltip=['월', '등록 유형', '등록 대수']
+        ).properties(
+            title=f"{year}년 월별 등록 추이"
+        ).interactive()
+
+        # Streamlit에 Altair 차트 표시
+        st.altair_chart(line_chart, use_container_width=True)
+
+    ### 지역별 신규 등록 현황
     with chart_col2:
         st.markdown("<h5 style='margin: 0; padding: 0;'>지역별 신규 등록 현황</h5>", unsafe_allow_html=True)
-        
-        # 더미 데이터 생성 (pandas 사용)
-        regions = ['서울', '경기', '인천', '부산', '대구', '광주', '대전', '울산']
-        # 등록 대수 (경기 9000 근처, 서울 5000 근처, 나머지는 2000 근처)
-        registration_counts = [5100, 9200, 2100, 2300, 1900, 1500, 1300, 800]
-        
+
+        print(f"지역 리스트 길이: {len(region_chart_result[0])}")
+        print(f"신규 등록 리스트 길이: {len(region_chart_result[1])}")
+        print(f"중고 등록 리스트 길이: {len(region_chart_result[2])}")
+
         regional_df = pd.DataFrame({
-            '지역': regions,
-            '등록 대수': registration_counts
+            '지역': region_chart_result[0],
+            '신규 등록': region_chart_result[1],
+            '중고 등록': region_chart_result[2]
         })
         
-        # Streamlit bar chart 사용 (x축: 지역, y축: 등록 대수)
-        st.bar_chart(regional_df.set_index('지역'), height=300)
+        long_df = pd.melt(
+            regional_df,
+            id_vars=['지역'],
+            value_vars=['신규 등록', '중고 등록'],
+            var_name='등록 구분',
+            value_name='등록 대수'
+        )
+        base = alt.Chart(long_df).encode(
+            x=alt.X('지역', sort=region_chart_result[0]), # 지역 순서 유지
+            y=alt.Y('등록 대수', title='등록 대수'),
+            color='등록 구분',
+            tooltip=['지역', '등록 구분', '등록 대수']
+        )
+        chart = base.mark_bar().encode(
+            x=alt.X('등록 구분', axis=None), # x축에는 등록 구분 이름을 숨깁니다.
+            column=alt.Column('지역', header=alt.Header(titleOrient="bottom", labelOrient="bottom")), # 지역별로 분리
+        )
+
+        st.altair_chart(chart, use_container_width=True)
 
     ## 3. 상속/증여 등록 특징 (Inheritance/Gift Registration Features)
 

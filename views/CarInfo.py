@@ -14,7 +14,7 @@ rows = {
 
 result = get_vehicle_flow_summary_by_region(5)
 
-for row in result:
+for row in result['rows']:
     rows['등록년월'].append(f"{row['year']}년 {row['month']}월")
     rows['지역'].append(row['sido_name'])
     rows['차량종류'].append(row['vehicle_kind'])
