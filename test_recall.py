@@ -11,7 +11,7 @@ from backend.db_main.recall_repository import (
 
 
 print("\n===== 최신 리콜 목록 (limit=5) =====")
-rows = get_recall_list(5)
+rows = get_recall_list(5,0)
 print(rows)
 
 print("\n===== 제조사별 리콜 건수 =====")
@@ -25,7 +25,7 @@ print(df_car)
 
 
 print("\n===== 월별 리콜 건수 =====")
-df_month = get_recall_monthly()
+df_month = get_recall_monthly(1,0)
 print(df_month)
 
 

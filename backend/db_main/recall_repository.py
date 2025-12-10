@@ -4,7 +4,9 @@ from backend.utils.db_utils import fetch_all_dict
 # ============================================================
 # R001 - 최신 리콜 목록 조회
 # ============================================================
-def get_recall_list(limit=100):
+def get_recall_list(limit=100,page_num=0):
+    offset = limit * page_num
+
     """
     최신 리콜 목록 조회 (딕셔너리 리스트 반환)
     """
@@ -16,9 +18,9 @@ def get_recall_list(limit=100):
             recall_date
         FROM fact_recall
         ORDER BY recall_date DESC
-        LIMIT %s;
+        LIMIT %s OFFSET %s;
     """
-    return fetch_all_dict(query, (limit,))
+    return fetch_all_dict(query, (limit,offset))
 
 
 # ============================================================
@@ -67,7 +69,8 @@ def get_recall_by_car_name(limit=None):
 # ============================================================
 # R004 - 월별 리콜 건수
 # ============================================================
-def get_recall_monthly(limit=None):
+def get_recall_monthly(limit=None,page_num=0):
+    offset = limit * page_num
     """
     월별 리콜 건수 집계 (딕셔너리 리스트 반환)
     """
@@ -81,8 +84,8 @@ def get_recall_monthly(limit=None):
 
     # limit이 None이 아니면 LIMIT 추가
     if limit is not None:
-        query += " LIMIT %s"
-        return fetch_all_dict(query, (limit,))
+        query += "LIMIT %s OFFSET %s"
+        return fetch_all_dict(query, (limit,offset))
 
     # limit 미지정 → LIMIT 없음
     return fetch_all_dict(query)
