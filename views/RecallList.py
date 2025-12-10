@@ -18,7 +18,7 @@ def click_more_btn():
 
 def render():
     st.markdown("<h2>리콜 목록</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='color:gray;'>리콜 정보를 확인하고 조치 방법을 안내받으세요.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#BDBDBD;'>리콜 정보를 확인하고 조치 방법을 안내받으세요.</p>", unsafe_allow_html=True)
 
     # 검색 바 UI -------------------------
     with st.form("search_form"):

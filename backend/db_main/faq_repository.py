@@ -53,3 +53,13 @@ def search_faq_brand_keyword(brand=None, keyword=None):
     query += " ORDER BY updated_at DESC"
 
     return fetch_all_dict(query, tuple(params))
+
+def get_faq_brand_count():
+    query = """
+        SELECT brand, count(*) as count
+        FROM faq
+        GROUP BY brand
+        ORDER BY brand
+    """
+    
+    return fetch_all_dict(query)

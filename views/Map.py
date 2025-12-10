@@ -6,6 +6,6 @@ gdf = gdf.set_crs(epsg=5179)
 
 
 gdf_wgs84 = gdf.to_crs(epsg=4326)
-gdf_wgs84.to_file("../assets/korea_sido_wgs84.geojson", driver="GeoJSON", encoding="utf-8")
+gdf_wgs84.to_file("../assets/charts/korea_sido_wgs84.geojson", driver="GeoJSON", encoding="utf-8")
 
 print(gdf_wgs84[["CTP_KOR_NM"]])
