@@ -1,17 +1,14 @@
-from backend.db_main.recall_repository import (
-    get_recall_list,
-    get_recall_count_by_maker,
-    get_recall_by_car_name,
-    get_recall_monthly,
-    get_recall_reason_count,
-    calc_recall_growth_rate,
-    get_top_makers,
-    get_top_recall_reasons,
-)
+from backend.db_main.recall_repository import filter_domestic_recalls
+from backend.utils.db_utils import get_connection, close_connection
 
+def test_filter_domestic_recalls():
+    conn = get_connection()
 
-print("\n===== 최신 리콜 목록 (limit=5) =====")
-rows = get_recall_list(5,0)
-print(rows)
+    try:
+        result = filter_domestic_recalls(brand="기아")
+        print(result)
 
+    finally:
+        close_connection(conn)
 
+test_filter_domestic_recalls()
