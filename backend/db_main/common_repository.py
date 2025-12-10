@@ -1,4 +1,4 @@
-from utils.db_utils import fetch_all_dict
+from backend.utils.db_utils import fetch_all_dict
 
 def get_regions():
     """
@@ -23,7 +23,7 @@ def get_regions():
 """------------------------------------------------"""
 
 
-from utils.db_utils import fetch_all_dict
+
 
 def get_fuel_types():
     """
@@ -53,7 +53,7 @@ def get_fuel_types():
 
 """------------------------------------------------"""
 
-from utils.db_utils import fetch_all_dict
+
 
 def get_sido_list():
     """
