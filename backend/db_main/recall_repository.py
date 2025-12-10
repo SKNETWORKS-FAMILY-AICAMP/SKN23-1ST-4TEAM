@@ -11,7 +11,7 @@ def get_recall_list(limit=30, page_num=0, origin_type=None):
     domestic_brands = ['기아 주식회사', '현대자동차(주)']
 
     query = """
-        SELECT recall_id, car_name, remedy_method, recall_date, maker_name
+        SELECT recall_id, car_name, remedy_method, recall_date, maker_name,fix_start_date
         FROM fact_recall
         WHERE 1=1
     """
@@ -77,26 +77,22 @@ def get_recall_by_car_name(limit=None):
 # ============================================================
 # R004 - 월별 리콜 건수
 # ============================================================
-def get_recall_monthly(limit=30,page_num=0):
-    offset = limit * page_num
-    """
-    월별 리콜 건수 집계 (딕셔너리 리스트 반환)
-    """
+def get_recall_monthly(limit=None, offset=0):
     query = """
-        SELECT DATE_FORMAT(recall_date,'%Y-%m') AS month,
-               COUNT(*) AS recall_count
+        SELECT 
+            CONCAT(YEAR(recall_date), '-', LPAD(MONTH(recall_date),2,'0')) AS month,
+            COUNT(*) AS recall_count
         FROM fact_recall
         GROUP BY month
         ORDER BY month
     """
 
-    # limit이 None이 아니면 LIMIT 추가
+    params = ()
     if limit is not None:
-        query += "LIMIT %s OFFSET %s"
-        return fetch_all_dict(query, (limit,offset))
+        query += " LIMIT %s OFFSET %s"
+        params = (limit, offset)
 
-    # limit 미지정 → LIMIT 없음
-    return fetch_all_dict(query)
+    return fetch_all_dict(query, params)
 
 
 # ============================================================
