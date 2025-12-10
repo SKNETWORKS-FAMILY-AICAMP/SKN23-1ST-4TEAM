@@ -1,5 +1,5 @@
 import pymysql
-from db_main.database import get_connection
+from backend.db_main.database import get_connection,close_connection
 
 def fetch_one_dict(query, params=None):
     """SQL 실행 후 단일 row를 dict 형태로 반환"""
@@ -28,7 +28,7 @@ def fetch_all_dict(query, params=None):
     finally:
         conn.close()
 import pymysql
-from db_main.database import get_connection, close_connection
+
 import pandas as pd
 
 
