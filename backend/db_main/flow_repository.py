@@ -68,6 +68,31 @@ def get_inheritance_gift_count(year: int, month: int, region: str = None):
     return rows
 
 
+# ============================================================
+#  D003 - 지역별 전체 차량 등록 건수 조회 (신규/중고/변경/말소/상속/증여 전체 포함)
+# ============================================================
+ 
+def get_region_total_flow(year, month):
+
+
+    query = """
+        SELECT 
+            s.sido_name,
+            SUM(f.flow_count) AS total_flow
+        FROM fact_flow_count f
+        JOIN dim_region_sido s ON f.sido_id = s.sido_id
+        WHERE f.year = %s
+          AND f.month = %s
+        GROUP BY s.sido_name
+        ORDER BY total_flow DESC;
+    """
+
+    rows = fetch_all_dict(query, (year, month))
+
+    # 변환: {지역명: 등록수}
+    result = {row["sido_name"]: int(row["total_flow"]) for row in rows}
+
+    return result
 
 # ============================================================
 # V008 차량 등록 건수 
