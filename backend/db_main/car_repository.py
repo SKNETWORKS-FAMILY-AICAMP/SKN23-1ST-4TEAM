@@ -1,7 +1,6 @@
 from decimal import Decimal
 from backend.utils.db_utils import fetch_one_dict
 from backend.utils.db_utils import fetch_all_dict
-from backend.utils.db_utils import fetch_dataframe
 
 """---------------------------------------------------"""
 #해당 연월의 신규 등록 합계
@@ -353,6 +352,42 @@ def get_total_used_registrations(start_year, start_month, end_year, end_month):
 
 
 
+
+# ============================
+# V007 차량 용도별 검색
+# ============================
+
+from backend.utils.db_utils import fetch_all_dict
+
+def get_vehicle_count_by_category(year: int, month: int):
+    """
+    V007 - 용도별 차량 보유대 집계 (관용/자가용/영업용)
+    count 값을 int로 변환해서 반환
+    """
+
+    query = """
+        SELECT 
+            usage_type,
+            SUM(stock_count) AS count
+        FROM fact_vehicle_stock
+        WHERE year = %s
+          AND month = %s
+        GROUP BY usage_type
+        ORDER BY count DESC;
+    """
+
+    rows = fetch_all_dict(query, (year, month))
+
+    # 🔥 Decimal → int 변환
+    return [
+        {
+            "usage_type": r["usage_type"],
+            "count": int(r["count"]) if r["count"] is not None else 0
+        }
+        for r in rows
+    ]
+
+
 # ============================
 # V011 차량 상세 검색
 # ============================
@@ -366,12 +401,13 @@ def get_vehicle_stock_search(
     sido_id=None,
     vehicle_kind=None,
     usage_type=None,
-    limit=100,
+    limit=30,
     offset=0
 ):
     """
     V011 - 차량 보유대 검색
     조건이 하나도 없을 때 → 전체 목록 전부 반환 (딕셔너리 형태)
+
     """
 
     # ★ 조건이 하나도 없으면 전체 데이터 반환
@@ -441,3 +477,4 @@ def get_vehicle_stock_search(
     params.extend([limit, offset])
 
     return fetch_all_dict(query, params)
+

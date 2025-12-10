@@ -66,3 +66,33 @@ def get_owner_count_by_region(year: int, month: int):
         {"region": r["region"], "count": int(r["owner_count"])}
         for r in rows
     ]
+
+"""--------------------------------------------------"""
+
+
+
+
+def get_owner_count_by_gender(year: int, month: int):
+   
+
+    query = """
+        SELECT 
+            gender,
+            SUM(stock_count) AS count
+        FROM fact_owner_demo_stock
+        WHERE year = %s
+          AND month = %s
+        GROUP BY gender
+        ORDER BY gender;
+    """
+
+    rows = fetch_all_dict(query, (year, month))
+
+    # 숫자 변환
+    return [
+        {
+            "gender": r["gender"],
+            "count": int(r["count"])
+        }
+        for r in rows
+    ]
