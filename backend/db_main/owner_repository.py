@@ -1,5 +1,5 @@
 from decimal import Decimal
-from utils.db_utils import fetch_all_dict
+from backend.utils.db_utils import fetch_all_dict
 
 def get_owner_count_by_age(conn, year: int, month: int):
     query = """
