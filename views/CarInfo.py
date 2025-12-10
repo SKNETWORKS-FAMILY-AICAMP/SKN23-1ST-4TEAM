@@ -1,6 +1,11 @@
 import streamlit as st
 import pandas as pd
 
+from backend.db_main.recall_repository import get_recall_list
+
+k_recall_result = get_recall_list(5, 1, '국내')
+o_recall_result = get_recall_list(5, 1, '해외')
+
 def render():
     st.markdown("<h2>자동차 정보</h2>", unsafe_allow_html=True)
     st.markdown("<p style='color:gray;'>차량 등록 현황 및 리콜 정보를 확인하세요.</p>", unsafe_allow_html=True)
@@ -32,30 +37,14 @@ def render():
 
     ## 2. 국내/해외 리콜 정보 (Domestic/Foreign Recall Information)
 
-    # 리콜 정보 데이터 (더미)
-    domestic_recalls = [
-        {'제조사': '현대자동차', '모델': '그랜저 IG', '결함': '에어백 전개 불량', '상태': '완료'},
-        {'제조사': '기아자동차', '모델': 'K3 DL3', '결함': '브레이크 오일 누유', '상태': '완료'},
-        {'제조사': '쌍용자동차', '모델': '티볼리', '결함': '연료펌프 결함', '상태': '진행'},
-        {'제조사': '현대자동차', '모델': '소나타 DN8', '결함': '파워 스티어링 결함', '상태': '진행'},
-    ]
-
-    foreign_recalls = [
-        {'제조사': 'Tesla', '모델': 'Model Y', '결함': '자율주행 소프트웨어 오류', '상태': '완료'},
-        {'제조사': 'BMW', '모델': 'X5', '결함': '냉각수 누수', '상태': '진행'},
-        {'제조사': 'Mercedes-Benz', '모델': 'E-Class', '결함': '변속기 결함', '상태': '완료'},
-        {'제조사': 'TOYOTA', '모델': 'Camry', '결함': '연료 탱크 균열', '상태': '진행'},
-    ]
-
     # 리콜 카드 생성 함수
-    def create_recall_card(manufacturer, model, defect):
-        
+    def create_recall_card(row):
         st.markdown(
             f"""
             <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 10px; line-height: 1.5;">
-                <p style="margin: 0; font-weight: bold;">{manufacturer}</p>
-                <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #555;">{model}</p>
-                <p style="margin: 5px 0 0 0; font-size: 0.9em;">{defect}</p>
+                <p style="margin: 0; font-weight: bold;">{row['maker_name']}</p>
+                <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #555;">{row['car_name']}</p>
+                <p style="margin: 5px 0 0 0; font-size: 0.9em;">{row['remedy_method']}</p>
             </div>
             """,
             unsafe_allow_html=True
@@ -75,8 +64,8 @@ def render():
             """,
             unsafe_allow_html=True
         )
-        for recall in domestic_recalls:
-            create_recall_card(recall['제조사'], recall['모델'], recall['결함'])
+        for data in k_recall_result:
+            create_recall_card(data)
 
     # 해외 리콜 정보
     with col_foreign:
@@ -89,5 +78,5 @@ def render():
             """,
             unsafe_allow_html=True
         )
-        for recall in foreign_recalls:
-            create_recall_card(recall['제조사'], recall['모델'], recall['결함'])
+        for data in o_recall_result:
+            create_recall_card(data)

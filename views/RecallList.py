@@ -58,7 +58,7 @@ def render():
             f"""
             <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 10px; line-height: 1.5;">
                 <div>
-                    <b style="margin: 0; font-weight: bold;">{row['maker_name']}</b>
+                    <b style="margin: 0;">{row['maker_name']}</b>
                     <span style="float: right; margin-right: 6px;">시행일자: {row['fix_start_date']}</span>
                 </div>
                 <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #555;">{row['car_name']}</p>
