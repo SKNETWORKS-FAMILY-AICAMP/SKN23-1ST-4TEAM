@@ -1,7 +1,6 @@
 from decimal import Decimal
 from backend.utils.db_utils import fetch_one_dict
 from backend.utils.db_utils import fetch_all_dict
-from backend.utils.db_utils import fetch_dataframe
 
 """---------------------------------------------------"""
 #해당 연월의 신규 등록 합계
@@ -402,12 +401,13 @@ def get_vehicle_stock_search(
     sido_id=None,
     vehicle_kind=None,
     usage_type=None,
-    limit=100,
+    limit=30,
     offset=0
 ):
     """
     V011 - 차량 보유대 검색
     조건이 하나도 없을 때 → 전체 목록 전부 반환 (딕셔너리 형태)
+
     """
 
     # ★ 조건이 하나도 없으면 전체 데이터 반환
