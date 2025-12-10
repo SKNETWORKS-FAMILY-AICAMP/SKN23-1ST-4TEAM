@@ -1,4 +1,4 @@
-from utils.db_utils import fetch_all_dict, fetch_dataframe
+from backend.utils.db_utils import fetch_all_dict
 
 
 # ============================================================
@@ -6,8 +6,7 @@ from utils.db_utils import fetch_all_dict, fetch_dataframe
 # ============================================================
 def get_recall_list(limit=100):
     """
-    최신 리콜 목록 조회
-    주요 컬럼만 반환: recall_id, car_name, remedy_method, recall_date
+    최신 리콜 목록 조회 (딕셔너리 리스트 반환)
     """
     query = """
         SELECT 
@@ -19,14 +18,15 @@ def get_recall_list(limit=100):
         ORDER BY recall_date DESC
         LIMIT %s;
     """
-    return fetch_dataframe(query, (limit,))
+    return fetch_all_dict(query, (limit,))
+
 
 # ============================================================
 # R002 - 제조사별 리콜 건수
 # ============================================================
 def get_recall_count_by_maker(limit=None):
     """
-    제조사별 리콜 건수 집계
+    제조사별 리콜 건수 집계 (딕셔너리 리스트)
     """
     query = """
         SELECT maker_name, COUNT(*) AS recall_count
@@ -35,11 +35,11 @@ def get_recall_count_by_maker(limit=None):
         ORDER BY recall_count DESC
     """
 
-    if limit:
+    if limit is not None:
         query += " LIMIT %s"
-        return fetch_dataframe(query, (limit,))
+        return fetch_all_dict(query, (limit,))
 
-    return fetch_dataframe(query)
+    return fetch_all_dict(query)
 
 
 # ============================================================
@@ -47,7 +47,7 @@ def get_recall_count_by_maker(limit=None):
 # ============================================================
 def get_recall_by_car_name(limit=None):
     """
-    차량명별 리콜 건수 집계
+    차량명별 리콜 건수 집계 (딕셔너리 리스트 반환)
     """
     query = """
         SELECT car_name, COUNT(*) AS recall_count
@@ -56,11 +56,12 @@ def get_recall_by_car_name(limit=None):
         ORDER BY recall_count DESC
     """
 
+    params = ()
     if limit:
         query += " LIMIT %s"
-        return fetch_dataframe(query, (limit,))
+        params = (limit,)
 
-    return fetch_dataframe(query)
+    return fetch_all_dict(query, params)
 
 
 # ============================================================
@@ -68,7 +69,7 @@ def get_recall_by_car_name(limit=None):
 # ============================================================
 def get_recall_monthly(limit=None):
     """
-    월별 리콜 건수 집계
+    월별 리콜 건수 집계 (딕셔너리 리스트 반환)
     """
     query = """
         SELECT DATE_FORMAT(recall_date,'%Y-%m') AS month,
@@ -78,11 +79,13 @@ def get_recall_monthly(limit=None):
         ORDER BY month
     """
 
-    if limit:
+    # limit이 None이 아니면 LIMIT 추가
+    if limit is not None:
         query += " LIMIT %s"
-        return fetch_dataframe(query, (limit,))
+        return fetch_all_dict(query, (limit,))
 
-    return fetch_dataframe(query)
+    # limit 미지정 → LIMIT 없음
+    return fetch_all_dict(query)
 
 
 # ============================================================
@@ -90,7 +93,7 @@ def get_recall_monthly(limit=None):
 # ============================================================
 def get_recall_reason_count(limit=None):
     """
-    리콜 사유별 발생 건수 집계
+    리콜 사유별 발생 건수 집계 (딕셔너리 리스트 반환)
     """
     query = """
         SELECT remedy_method, COUNT(*) AS count
@@ -99,42 +102,57 @@ def get_recall_reason_count(limit=None):
         ORDER BY count DESC
     """
 
+    params = ()
     if limit:
         query += " LIMIT %s"
-        return fetch_dataframe(query, (limit,))
+        params = (limit,)
 
-    return fetch_dataframe(query)
+    return fetch_all_dict(query, params)
 
 
 # ============================================================
-# R006 - 리콜 증가율 계산 (Pandas 활용)
+# R006 - 리콜 증가율 계산 (딕셔너리 기반 처리)
 # ============================================================
-def calc_recall_growth_rate(df):
+def calc_recall_growth_rate(rows):
     """
-    월별 리콜 증가율 계산
-    df: get_recall_monthly() 결과 DataFrame
+    월별 리콜 증가율 계산 (딕셔너리 리스트 기반)
+    rows: get_recall_monthly() 결과 (list of dict)
     """
-    df['prev'] = df['recall_count'].shift(1)
-    df['growth(%)'] = ((df['recall_count'] - df['prev']) / df['prev']) * 100
-    df['growth(%)'] = df['growth(%)'].fillna(0)
-    return df
+    result = []
+    
+    prev = None
+    for row in rows:
+        current = row['recall_count']
+
+        if prev is None:
+            growth = 0
+        else:
+            growth = ((current - prev) / prev * 100) if prev != 0 else 0
+
+        new_row = row.copy()
+        new_row['growth_percent'] = round(growth, 2)
+
+        result.append(new_row)
+        prev = current
+
+    return result
 
 
 # ============================================================
 # R007 - TOP N 제조사
 # ============================================================
-def get_top_makers(df, n=5):
+def get_top_makers(rows, n=5):
     """
-    제조사별 리콜 건수 상위 N개
+    제조사별 리콜 건수 Top N (딕셔너리 리스트 반환)
     """
-    return df.sort_values("recall_count", ascending=False).head(n)
+    return sorted(rows, key=lambda x: x['recall_count'], reverse=True)[:n]
 
 
 # ============================================================
 # R008 - TOP N 리콜 사유
 # ============================================================
-def get_top_recall_reasons(df, n=5):
+def get_top_recall_reasons(rows, n=5):
     """
-    가장 많이 발생한 리콜 사유 상위 N개
+    리콜 사유별 발생 Top N (딕셔너리 리스트 반환)
     """
-    return df.sort_values("count", ascending=False).head(n)
+    return sorted(rows, key=lambda x: x['count'], reverse=True)[:n]

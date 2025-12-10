@@ -1,7 +1,7 @@
 #등록 변동
 from decimal import Decimal
-from utils.db_utils import fetch_one_dict
-from utils.db_utils import fetch_all_dict
+from backend.utils.db_utils import fetch_one_dict
+from backend.utils.db_utils import fetch_all_dict
 
 def get_flow_count_by_subtype(year, month):
     query = """
