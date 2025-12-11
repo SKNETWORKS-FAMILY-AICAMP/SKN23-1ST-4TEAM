@@ -1,9 +1,16 @@
+import json
 import streamlit as st
 import pandas as pd
-import numpy as np
-
+import altair as alt
+import plotly.express as px
 from backend.db_main.recall_repository import get_recall_list, get_recall_monthly
-from backend.db_main.car_repository import get_total_new_registrations
+from backend.db_main.car_repository import get_total_new_registrations, get_total_used_registrations, get_monthly_registration_trend, get_region_ranking
+from backend.db_main.flow_repository import get_region_total_flow, get_inheritance_gift_top3_regions
+from backend.db_main.faq_repository import get_faq_brand_count
+
+# 버튼 이동 이벤트
+def move_page(target_page):
+    st.session_state['page'] = target_page
 
 # 증감 비율 구하기
 def calculate_growth_rate(sub_month, month):
@@ -21,9 +28,12 @@ def calculate_growth_rate(sub_month, month):
     
     return growth_rate
 
+year = 2025
+month = 10
+
+# 신규 등록
 def get_regist_monthly():
-    year = 2025
-    month = 10
+    global year, month
 
     sub = get_total_new_registrations(year, (month-1), year, (month-1))
     this = get_total_new_registrations(year, month, year, month)
@@ -31,43 +41,151 @@ def get_regist_monthly():
 
     return [sub['total_new'], this['total_new'], rate]
 
+# 중고 등록
+def get_old_monthly():
+    global year, month
+    
+    sub = get_total_used_registrations(year, (month-1), year, (month-1))
+    this = get_total_used_registrations(year, month, year, month)
+    rate = calculate_growth_rate(sub['total_used'], this['total_used'])
+
+    return [sub['total_used'], this['total_used'], rate]
+
+# 등록 차트
+def make_regist_chart_data():
+    global year
+
+    new_result = get_monthly_registration_trend(year, "신규")
+    old_result = get_monthly_registration_trend(year, "중고")
+
+    all_records = []
+
+    for item in new_result['items']:
+        # new_rows.append(item['count'])
+        all_records.append({
+            '년도': year,
+            '월': item['month'],
+            '등록 유형': "신규",
+            '등록 대수': item['count']
+        })
+
+    for item in old_result['items']:
+        # old_rows.append(item['count'])
+        all_records.append({
+            '년도': year,
+            '월': item['month'],
+            '등록 유형': "중고",
+            '등록 대수': item['count']
+        })
+
+    return all_records
+
+def mapping_region(user_data):
+    mapping_dict = {
+        "서울": "서울특별시",
+        "부산": "부산광역시",
+        "대구": "대구광역시",
+        "인천": "인천광역시",
+        "광주": "광주광역시",
+        "대전": "대전광역시",
+        "울산": "울산광역시",
+        "세종": "세종특별자치시",
+        "경기": "경기도",
+        "충북": "충청북도",
+        "충남": "충청남도",
+        "전북": "전라북도",
+        "전남": "전라남도",
+        "경북": "경상북도",
+        "경남": "경상남도",
+        "제주": "제주특별자치도",
+        "강원": "강원특별자치도"
+    }
+
+    return [mapping_dict[k] for k in user_data]
+
+def make_region_chart_data():
+    global year, month
+
+    new_rows = []
+    old_rows = []
+
+    new_result = get_region_ranking(year, month, "신규")
+    old_result = get_region_ranking(year, month, "중고")
+
+    regions = [item['sido_name'] for item in new_result['ranking']]
+    new_rows = [item['count'] for item in new_result['ranking']]
+    old_rows = [item['count'] for item in old_result['ranking']]
+
+    return [regions, new_rows, old_rows]
+
 # 이번달 등록 수
 regist_result = get_regist_monthly()
 
+# 중고 등록 수
+old_result = get_old_monthly()
+
 # 이번달 리콜 수
-# recall_result = get_recall_monthly()
+recall_result = get_recall_monthly()
 
-# recall_data = []
-# for i in recall_result:
-#     if i['month'] == '2025-09':
-#         recall_data.append(i['recall_count'])
-#     elif i['month'] == '2025-10':
-#         recall_data.append(i['recall_count'])
+recall_data = []
+for i in recall_result:
+    if i['month'] == '2025-09':
+        recall_data.append(i['recall_count'])
+    elif i['month'] == '2025-10':
+        recall_data.append(i['recall_count'])
 
-# rate = calculate_growth_rate(recall_data[0], recall_data[1])
-# recall_data.append(rate)
+rate = calculate_growth_rate(recall_data[0], recall_data[1])
+recall_data.append(rate)
+
+# 월별 등록 차트
+monthly_chart_result = make_regist_chart_data()
+
+# 브랜드별 FAQ 등록 수
+faq_data = get_faq_brand_count()
+brand_df = pd.DataFrame(faq_data)
+
+# 광역시도별 지도 차트
+region_map_data = get_region_total_flow(year, month)
+
+map_df = pd.DataFrame({
+    "region": mapping_region(region_map_data.keys()),
+    "value": list(region_map_data.values())
+})
+
+with open("./assets/charts/korea_sido_wgs84.geojson", encoding="utf-8") as f:
+    korea_geo = json.load(f)
+
+# 지역별 등록 차트
+region_chart_result = make_region_chart_data()
+
+# 상속/증여 등록 특징
+features = get_inheritance_gift_top3_regions()
 
 # 리콜 목록 조회
 k_recall_result = get_recall_list(5, 1, '국내')
 o_recall_result = get_recall_list(5, 1, '해외')
 
+# ----------------------------------- 그리기 -----------------------------------
+
 def render():
     st.markdown("<h2>2025년 12월 자동차 등록 현황</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='color:gray;'>지역별 신규 등록 트렌드와 리콜 정보를 한눈에 확인하세요.</p>", unsafe_allow_html=True)
+    st.markdown("<p class='text_gray'>지역별 신규 등록 트렌드와 리콜 정보를 한눈에 확인하세요.</p>", unsafe_allow_html=True)
+
+    st.container(border=False, height=10)
 
     ## 1. 상단 요약 카드 (Summary Cards)
-    col1, col2, _ = st.columns(3)
+    col1, col2, col3 = st.columns(3)
 
     def create_summary_card(title, data):
-        change_color = "green" if data[2] > 0 else "red"
+        change_color = "text_green" if data[2] > 0 else "text_red"
         
         st.markdown(
             f"""
-            <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; height: 120px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div class='text_black' style="border: 1px solid #D7D7D7; border-radius: 8px; padding: 20px; height: 120px; display: flex; flex-direction: column; justify-content: space-between;">
                 <p style="margin: 0; font-size: 1em; color: #666;">{title}</p>
-                <p style="margin: 5px 0 0 0; font-weight: bold;">{format(data[1], ',')}</p>
-                <p style="margin: 5px 0 0 0; font-size: 0.9em; color: {change_color};">
-                    {"📈 +" if change_color == "green" else "📉 -"} {round(data[2], 2)}%
+                <p style="margin: 5px 0 0 0; font-weight: bold;">{format(data[1], ',')} 건</p>
+                <p class="{change_color}" style="margin: 5px 0 0 0; font-size: 0.9em;">
+                    {"📈 +" if change_color == "text_green" else "📉 -"} {round(data[2], 2)}%
                 </p>
             </div>
             """,
@@ -78,86 +196,127 @@ def render():
         create_summary_card("이번 달 신규 등록", regist_result)
 
     with col2:
-        create_summary_card("이번 달 신규 등록", regist_result)
-        # create_summary_card("이번 달 리콜 수", recall_data)
+        create_summary_card("이번 달 중고/이전 등록", old_result)
 
-    # with col3:
-    #     create_summary_card("우리 지역 1위 차종", summary_data["우리 지역 1위 차종"])
+    with col3:
+        create_summary_card("이번 달 리콜 등록", recall_data)
 
-    ## 2. 월별/지역별 등록 차트 (Charts)
-    chart_col1, chart_col2 = st.columns(2)
+    st.container(border=False, height=20)
 
-    ### 📈 월별 신규 등록 추이
+    ## 2. 차트
+    chart_col1, chart_col2 = st.columns(2, vertical_alignment="bottom")
+
+    ### 월별 신규 등록 추이
     with chart_col1:
         st.markdown("<h5 style='margin: 0; padding: 0;'>월별 신규 자동차 등록 추이</h5>", unsafe_allow_html=True)
-        
-        # 더미 데이터 생성 (pandas 사용)
-        months = [f"{i}월" for i in range(1, 13)]
-        
-        # 전체 등록 (20,000대 근처)
-        np.random.seed(42)
-        base_registrations = np.random.randint(18000, 24000, size=12)
-        # 상속/증여 (300~1000대)
-        inheritance_registrations = np.random.randint(300, 1000, size=12)
-        
-        monthly_df = pd.DataFrame({
-            '월': months,
-            '전체 등록': base_registrations,
-            '상속/증여': inheritance_registrations
-        })
-        
-        # 월별 추이 차트 표시
-        # '월' 컬럼을 인덱스로 설정하여 차트 생성
-        monthly_df = monthly_df.set_index('월')
-        
-        # Streamlit line chart 사용
-        st.line_chart(monthly_df, height=300)
 
-    ### 📊 지역별 신규 등록 현황
+        line_chart_df = pd.DataFrame(monthly_chart_result)
+
+        # Altair 차트 정의
+        line_chart = alt.Chart(line_chart_df).mark_line(point=True).encode(
+            # X축: 월 (연속형, 월별 순서로)
+            x=alt.X('월', axis=alt.Axis(tickMinStep=1, title='월')),
+            
+            # Y축: 등록 대수
+            y=alt.Y('등록 대수', title='등록 대수'),
+            
+            # 색상: 등록 유형(신규/중고)에 따라 라인 분리
+            color='등록 유형',
+            
+            # 툴팁 추가
+            tooltip=['월', '등록 유형', '등록 대수']
+        ).interactive()
+
+        # Streamlit에 Altair 차트 표시
+        st.altair_chart(line_chart, use_container_width=True)
+
+    ### 지역별 신규 등록 현황
     with chart_col2:
+        st.markdown("<h5 style='margin: 0; padding: 0;'>지역별 자동차 등록 추이</h5>", unsafe_allow_html=True)
+
+        fig = px.choropleth(
+            map_df,
+            geojson=korea_geo,
+            locations="region",
+            featureidkey="properties.CTP_KOR_NM",
+            color="value",
+            hover_name="region",
+            hover_data={"value": True},
+            color_continuous_scale="Blues"
+        )
+
+        fig.update_geos(
+            fitbounds="locations",
+            visible=False,
+            projection_scale=10,
+            center={"lat": 36.5, "lon": 127.5}
+        )
+
+        # Streamlit에 표시
+        st.plotly_chart(fig, use_container_width=True)
+
+    chart_col3, chart_col4 = st.columns(2, vertical_alignment="bottom")
+
+    with chart_col3:
+        st.markdown("<h5 style='margin: 0; padding: 0;'>브랜드별 FAQ 등록 현황</h5>", unsafe_allow_html=True)
+        
+        fig = px.pie(
+            brand_df,
+            names='brand',       # 카테고리
+            values='count',      # 값
+            color_discrete_sequence=px.colors.qualitative.Set3
+        )
+        fig.update_traces(
+            hovertemplate='<b>%{value}건</b>}'
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+    with chart_col4:
         st.markdown("<h5 style='margin: 0; padding: 0;'>지역별 신규 등록 현황</h5>", unsafe_allow_html=True)
-        
-        # 더미 데이터 생성 (pandas 사용)
-        regions = ['서울', '경기', '인천', '부산', '대구', '광주', '대전', '울산']
-        # 등록 대수 (경기 9000 근처, 서울 5000 근처, 나머지는 2000 근처)
-        registration_counts = [5100, 9200, 2100, 2300, 1900, 1500, 1300, 800]
-        
+
+        st.container(border=False, height=10)
+
         regional_df = pd.DataFrame({
-            '지역': regions,
-            '등록 대수': registration_counts
+            '지역': region_chart_result[0],
+            '신규 등록': region_chart_result[1],
+            '중고 등록': region_chart_result[2]
         })
         
-        # Streamlit bar chart 사용 (x축: 지역, y축: 등록 대수)
-        st.bar_chart(regional_df.set_index('지역'), height=300)
+        long_df = pd.melt(
+            regional_df,
+            id_vars=['지역'],
+            value_vars=['신규 등록', '중고 등록'],
+            var_name='등록 구분',
+            value_name='등록 대수'
+        )
+        chart = alt.Chart(long_df).mark_bar().encode(
+            x=alt.X('지역:N', sort=region_chart_result[0]),    # 지역 순서 유지
+            y=alt.Y('등록 대수:Q', title='등록 대수'),
+            color=alt.Color('등록 구분:N', title='등록 구분'),
+            tooltip=['지역', '등록 구분', '등록 대수']
+        ).properties(width=600)
+
+        st.altair_chart(chart, use_container_width=True)
 
     ## 3. 상속/증여 등록 특징 (Inheritance/Gift Registration Features)
 
-    st.markdown("<h5 style='margin: 0; padding: 0;'>🧑‍💻 상속/증여 등록 특징</h5>", unsafe_allow_html=True)
-    st.markdown("<p style='color:gray;'>지역별 상속/증여 차량 등록이 많은 지역과 연령대 분석</p>", unsafe_allow_html=True)
+    st.markdown("""<h5 style='margin: 0; padding: 0;'>상속/증여 등록 특징</h5>""", unsafe_allow_html=True)
+    st.markdown("""<p class="text_gray" style="font-size: 0.9rem;"'>지역별 상속/증여 차량 등록이 많은 지역과 연령대 분석</p>""", unsafe_allow_html=True)
 
     feature_col1, feature_col2, feature_col3 = st.columns(3)
-
-    # 특징 데이터 (더미)
-    features = [
-        {"region": "서울특별시", "count": "5,234대", "ratio": "9.2%", "age": "45세"},
-        {"region": "경기도", "count": "8,921대", "ratio": "7.8%", "age": "42세"},
-        {"region": "부산광역시", "count": "2,156대", "ratio": "10.1%", "age": "48세"},
-    ]
 
     def create_feature_box(data, column):
         """상속/증여 특징 정보를 표시하는 박스"""
         with column:
             st.markdown(
                 f"""
-                <div style="border: 1px solid #eee; border-radius: 8px; padding: 15px; background-color: #f9f9f9;">
+                <div class="text_black" style="border: 1px solid #eee; border-radius: 8px; padding: 15px; background-color: #F0F0F0;">
                     <p style="margin: 0; font-weight: bold; font-size: 1.1em;">
                         {data['region']}
                     </p>
-                    <ul style="list-style: none; padding: 0; margin-top: 10px;">
-                        <li style="margin-bottom: 5px;">등록 대수: <strong>{data['count']}</strong></li>
-                        <li style="margin-bottom: 5px;">상속/증여: <strong>{data['ratio']}</strong></li>
-                        <li>평균 연령: <strong>{data['age']}</strong></li>
-                    </ul>
+                    <p style="margin-bottom: 5px;">등록 대수: <strong>{data['count']}</strong>대</p>
+                    <p style="margin-bottom: 5px;">상속/증여: <strong>{data['rate']}%</strong></p>
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -168,11 +327,13 @@ def render():
     create_feature_box(features[1], feature_col2)
     create_feature_box(features[2], feature_col3)
 
-    ## 3. 국내/해외 리콜 정보 (Domestic/Foreign Recall Information)
+    st.container(border=False, height=30)
+
+    ## 4. 국내/해외 리콜 정보
     def create_recall_card(row):
         st.markdown(
             f"""
-            <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 10px; line-height: 1.5;">
+            <div class="text_black" style="border: 1px solid #D7D7D7; border-radius: 8px; padding: 15px; margin-bottom: 10px; line-height: 1.5;">
                 <div>
                     <b style="margin: 0;">{row['maker_name']}</b>
                     <span style="float: right; margin-right: 6px;">시행일자: {row['fix_start_date']}</span>
@@ -184,32 +345,49 @@ def render():
             unsafe_allow_html=True
         )
 
+    st.markdown("""
+        <style>
+            /* Streamlit 버튼 스타일 재정의 */
+            div.stColumn div.stButton > button {
+                background-color: transparent !important; 
+                color: #3A7BFF !important;              
+                border: none !important;                 
+                padding: 0 !important;                   
+                margin: 0 !important;                    
+                text-decoration: none !important;        
+                font-size: 14px;                         
+                cursor: pointer;                         
+            }
+            div.stButton {
+                height: 20px; /* st.button을 감싸는 div의 높이 조정 */
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
     col_domestic, col_foreign = st.columns(2)
 
-    # 국내 리콜 정보
+    # 국내
     with col_domestic:
-        st.markdown(
-            """
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h5 style="margin: 0; padding: 0;">⚠️ 국내 리콜</h5>
-                <a href="#" on_click={} style="text-decoration: none; color: #165DFB ;">전체 보기 →</a>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        domestic_tit, domestic_link = st.columns([1, 0.2])
+
+        with domestic_tit:
+            st.markdown('<h5 style="margin: 0; padding: 0;">국내 리콜</h5>', unsafe_allow_html=True)
+
+        with domestic_link:
+            st.button("전체 보기 →", on_click=move_page, args=('recall',), key='k_recall', type='tertiary', width=100)
+
         for data in k_recall_result:
             create_recall_card(data)
 
-    # 해외 리콜 정보
+    # 해외
     with col_foreign:
-        st.markdown(
-            """
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h5 style="margin: 0; padding: 0;">⚠️ 해외 리콜</h5>
-                <a href="#" style="text-decoration: none; color: #165DFB ;">전체 보기 →</a>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        domestic_tit, domestic_link = st.columns([1, 0.2])
+
+        with domestic_tit:
+            st.markdown('<h5 style="margin: 0; padding: 0;">해외 리콜</h5>', unsafe_allow_html=True)
+
+        with domestic_link:
+            st.button("전체 보기 →", on_click=move_page, args=('recall',), key='o_recall', type='tertiary', width=100)
+
         for data in o_recall_result:
             create_recall_card(data)
