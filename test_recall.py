@@ -1,14 +1,12 @@
-from backend.db_main.recall_repository import filter_domestic_recalls
+from backend.db_main.recall_repository import get_recall_filtered
 from backend.utils.db_utils import get_connection, close_connection
 
-def test_filter_domestic_recalls():
-    conn = get_connection()
+conn = get_connection()
 
-    try:
-        result = filter_domestic_recalls(brand="기아")
+try:
+        result = get_recall_filtered(brand = "기아")
         print(result)
 
-    finally:
+finally:
         close_connection(conn)
 
-test_filter_domestic_recalls()
