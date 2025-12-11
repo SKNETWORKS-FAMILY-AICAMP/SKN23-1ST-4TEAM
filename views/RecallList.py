@@ -18,7 +18,7 @@ def click_more_btn():
 
 def render():
     st.markdown("<h2>리콜 목록</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#BDBDBD;'>리콜 정보를 확인하고 조치 방법을 안내받으세요.</p>", unsafe_allow_html=True)
+    st.markdown("<p class='text_gray'>리콜 정보를 확인하고 조치 방법을 안내받으세요.</p>", unsafe_allow_html=True)
 
     # 검색 바 UI -------------------------
     with st.form("search_form"):
@@ -47,7 +47,7 @@ def render():
     left, right = st.columns([7, 2])
 
     with left:
-        st.markdown(f"<p>총 <b>{len(result)}</b>건의 리콜 정보</p>", unsafe_allow_html=True)
+        st.markdown(f"<p class='text_black'>총 <b>{len(result)}</b>건의 리콜 정보</p>", unsafe_allow_html=True)
 
     with right:
         sort_opt = st.selectbox(" ", ["정렬 기준 선택", "등록일 최신순", "등록 대수 많은순"], label_visibility="collapsed")
@@ -56,7 +56,7 @@ def render():
     def create_recall_card(row):
         st.markdown(
             f"""
-            <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 10px; line-height: 1.5;">
+            <div class='text_black' style="border: 1px solid #D7D7D7; border-radius: 8px; padding: 15px; margin-bottom: 10px; line-height: 1.5;">
                 <div>
                     <b style="margin: 0;">{row['maker_name']}</b>
                     <span style="float: right; margin-right: 6px;">시행일자: {row['fix_start_date']}</span>

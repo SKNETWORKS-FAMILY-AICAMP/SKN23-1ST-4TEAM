@@ -169,7 +169,7 @@ o_recall_result = get_recall_list(5, 1, '해외')
 
 def render():
     st.markdown("<h2>2025년 12월 자동차 등록 현황</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#BDBDBD;'>지역별 신규 등록 트렌드와 리콜 정보를 한눈에 확인하세요.</p>", unsafe_allow_html=True)
+    st.markdown("<p class='text_gray'>지역별 신규 등록 트렌드와 리콜 정보를 한눈에 확인하세요.</p>", unsafe_allow_html=True)
 
     st.container(border=False, height=10)
 
@@ -177,15 +177,15 @@ def render():
     col1, col2, col3 = st.columns(3)
 
     def create_summary_card(title, data):
-        change_color = "green" if data[2] > 0 else "red"
+        change_color = "text_green" if data[2] > 0 else "text_red"
         
         st.markdown(
             f"""
-            <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; height: 120px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div class='text_black' style="border: 1px solid #D7D7D7; border-radius: 8px; padding: 20px; height: 120px; display: flex; flex-direction: column; justify-content: space-between;">
                 <p style="margin: 0; font-size: 1em; color: #666;">{title}</p>
                 <p style="margin: 5px 0 0 0; font-weight: bold;">{format(data[1], ',')} 건</p>
-                <p style="margin: 5px 0 0 0; font-size: 0.9em; color: {change_color};">
-                    {"📈 +" if change_color == "green" else "📉 -"} {round(data[2], 2)}%
+                <p class="{change_color}" style="margin: 5px 0 0 0; font-size: 0.9em;">
+                    {"📈 +" if change_color == "text_green" else "📉 -"} {round(data[2], 2)}%
                 </p>
             </div>
             """,
@@ -204,7 +204,7 @@ def render():
     st.container(border=False, height=20)
 
     ## 2. 차트
-    chart_col1, chart_col2 = st.columns(2)
+    chart_col1, chart_col2 = st.columns(2, vertical_alignment="bottom")
 
     ### 월별 신규 등록 추이
     with chart_col1:
@@ -225,8 +225,6 @@ def render():
             
             # 툴팁 추가
             tooltip=['월', '등록 유형', '등록 대수']
-        ).properties(
-            title=f"{year}년 월별 등록 추이"
         ).interactive()
 
         # Streamlit에 Altair 차트 표시
@@ -234,6 +232,8 @@ def render():
 
     ### 지역별 신규 등록 현황
     with chart_col2:
+        st.markdown("<h5 style='margin: 0; padding: 0;'>지역별 자동차 등록 추이</h5>", unsafe_allow_html=True)
+
         fig = px.choropleth(
             map_df,
             geojson=korea_geo,
@@ -255,7 +255,7 @@ def render():
         # Streamlit에 표시
         st.plotly_chart(fig, use_container_width=True)
 
-    chart_col3, chart_col4 = st.columns(2)
+    chart_col3, chart_col4 = st.columns(2, vertical_alignment="bottom")
 
     with chart_col3:
         st.markdown("<h5 style='margin: 0; padding: 0;'>브랜드별 FAQ 등록 현황</h5>", unsafe_allow_html=True)
@@ -264,17 +264,18 @@ def render():
             brand_df,
             names='brand',       # 카테고리
             values='count',      # 값
-            color='brand',       # 색상
             color_discrete_sequence=px.colors.qualitative.Set3
         )
         fig.update_traces(
-            hovertemplate='<b>등록 수: %{value}</b>}'
+            hovertemplate='<b>%{value}건</b>}'
         )
 
         st.plotly_chart(fig, use_container_width=True)
 
     with chart_col4:
         st.markdown("<h5 style='margin: 0; padding: 0;'>지역별 신규 등록 현황</h5>", unsafe_allow_html=True)
+
+        st.container(border=False, height=10)
 
         regional_df = pd.DataFrame({
             '지역': region_chart_result[0],
@@ -301,7 +302,7 @@ def render():
     ## 3. 상속/증여 등록 특징 (Inheritance/Gift Registration Features)
 
     st.markdown("""<h5 style='margin: 0; padding: 0;'>상속/증여 등록 특징</h5>""", unsafe_allow_html=True)
-    st.markdown("""<p style='color:#BDBDBD;'>지역별 상속/증여 차량 등록이 많은 지역과 연령대 분석</p>""", unsafe_allow_html=True)
+    st.markdown("""<p class="text_gray" style="font-size: 0.9rem;"'>지역별 상속/증여 차량 등록이 많은 지역과 연령대 분석</p>""", unsafe_allow_html=True)
 
     feature_col1, feature_col2, feature_col3 = st.columns(3)
 
@@ -310,7 +311,7 @@ def render():
         with column:
             st.markdown(
                 f"""
-                <div style="border: 1px solid #eee; border-radius: 8px; padding: 15px; background-color: #f9f9f9;">
+                <div class="text_black" style="border: 1px solid #eee; border-radius: 8px; padding: 15px; background-color: #F0F0F0;">
                     <p style="margin: 0; font-weight: bold; font-size: 1.1em;">
                         {data['region']}
                     </p>
@@ -332,7 +333,7 @@ def render():
     def create_recall_card(row):
         st.markdown(
             f"""
-            <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 10px; line-height: 1.5;">
+            <div class="text_black" style="border: 1px solid #D7D7D7; border-radius: 8px; padding: 15px; margin-bottom: 10px; line-height: 1.5;">
                 <div>
                     <b style="margin: 0;">{row['maker_name']}</b>
                     <span style="float: right; margin-right: 6px;">시행일자: {row['fix_start_date']}</span>
@@ -347,9 +348,9 @@ def render():
     st.markdown("""
         <style>
             /* Streamlit 버튼 스타일 재정의 */
-            div.stButton > button {
+            div.stColumn div.stButton > button {
                 background-color: transparent !important; 
-                color: #165DFB !important;              
+                color: #3A7BFF !important;              
                 border: none !important;                 
                 padding: 0 !important;                   
                 margin: 0 !important;                    
@@ -367,7 +368,7 @@ def render():
 
     # 국내
     with col_domestic:
-        domestic_tit, domestic_link = st.columns([1, 0.1])
+        domestic_tit, domestic_link = st.columns([1, 0.2])
 
         with domestic_tit:
             st.markdown('<h5 style="margin: 0; padding: 0;">국내 리콜</h5>', unsafe_allow_html=True)
@@ -380,7 +381,7 @@ def render():
 
     # 해외
     with col_foreign:
-        domestic_tit, domestic_link = st.columns([1, 0.1])
+        domestic_tit, domestic_link = st.columns([1, 0.2])
 
         with domestic_tit:
             st.markdown('<h5 style="margin: 0; padding: 0;">해외 리콜</h5>', unsafe_allow_html=True)

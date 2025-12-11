@@ -30,10 +30,10 @@ o_recall_result = get_recall_list(5, 1, '해외')
 
 def render():
     st.markdown("<h2>자동차 정보</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#BDBDBD;'>차량 등록 현황 및 리콜 정보를 확인하세요.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#7C7C7C;'>차량 등록 현황 및 리콜 정보를 확인하세요.</p>", unsafe_allow_html=True)
     
     with st.container():
-        col1, col2 = st.columns([1, 0.05])
+        col1, col2 = st.columns([1, 0.1])
 
         with col1:
             st.markdown('<h5 style="margin: 0; padding: 0;">최근 차량 등록 현황</h5>', unsafe_allow_html=True)
@@ -51,7 +51,7 @@ def render():
     def create_recall_card(row):
         st.markdown(
             f"""
-            <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 10px; line-height: 1.5;">
+            <div class='text_black' style="border: 1px solid #D7D7D7; border-radius: 8px; padding: 15px; margin-bottom: 10px; line-height: 1.5;">
                 <div>
                     <b style="margin: 0;">{row['maker_name']}</b>
                     <span style="float: right; margin-right: 6px;">시행일자: {row['fix_start_date']}</span>
@@ -66,9 +66,9 @@ def render():
     st.markdown("""
         <style>
             /* Streamlit 버튼 스타일 재정의 */
-            div.stButton > button {
+            div.stColumn div.stButton > button {
                 background-color: transparent !important; 
-                color: #165DFB !important;              
+                color: #3A7BFF !important;              
                 border: none !important;                 
                 padding: 0 !important;                   
                 margin: 0 !important;                    
@@ -86,7 +86,7 @@ def render():
 
     # 국내
     with col_domestic:
-        domestic_tit, domestic_link = st.columns([1, 0.1])
+        domestic_tit, domestic_link = st.columns([1, 0.2])
 
         with domestic_tit:
             st.markdown('<h5 style="margin: 0; padding: 0;">국내 리콜</h5>', unsafe_allow_html=True)
@@ -99,7 +99,7 @@ def render():
 
     # 해외
     with col_foreign:
-        domestic_tit, domestic_link = st.columns([1, 0.1])
+        domestic_tit, domestic_link = st.columns([1, 0.2])
 
         with domestic_tit:
             st.markdown('<h5 style="margin: 0; padding: 0;">해외 리콜</h5>', unsafe_allow_html=True)

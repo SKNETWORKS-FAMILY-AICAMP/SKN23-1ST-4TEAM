@@ -59,7 +59,7 @@ def render_pagination_ui():
     if end_page - start_page < MAX_BUTTONS - 1:
         start_page = max(1, end_page - MAX_BUTTONS + 1)
 
-    cols = st.columns([0.5] + [0.3] * (end_page - start_page + 1) + [0.5])
+    cols = st.columns([0.5] + [0.3] * (end_page - start_page + 1) + [0.5], border=False)
 
     # --- [이전] 버튼 ---
     with cols[0]:
@@ -67,7 +67,8 @@ def render_pagination_ui():
             "← 이전",
             on_click=go_to_prev,
             disabled=(current_page == 1), # 첫 페이지에서는 비활성화
-            key="btn_prev"
+            key="btn_prev",
+            type='tertiary'
         )
     # --- 페이지 번호 버튼 ---
     # 버튼이 들어갈 칼럼의 인덱스는 1부터 시작
@@ -77,13 +78,15 @@ def render_pagination_ui():
             if page == current_page:
                 st.button(
                     f"**{page}**", 
-                    key=f"btn_page_{page}"
+                    key=f"btn_page_{page}",
+                    type='tertiary'
                 )
             else:
                 st.button(
                     f"{page}", 
                     on_click=go_to_page(page),
-                    key=f"btn_page_{page}"
+                    key=f"btn_page_{page}",
+                    type='tertiary'
                 )
         col_index += 1
     # --- [다음] 버튼 ---
@@ -92,7 +95,8 @@ def render_pagination_ui():
             "다음 →",
             on_click=go_to_next,
             disabled=(current_page == TOTAL_PAGES), # 마지막 페이지에서는 비활성화
-            key="btn_next"
+            key="btn_next",
+            type='tertiary'
         )
 
 def render():
@@ -100,7 +104,7 @@ def render():
     # 기본 설정
     # -------------------------
     st.markdown("<h2>차량 등록 현황</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#BDBDBD;'>차량 등록 정보를 상세하게 확인하세요</p>", unsafe_allow_html=True)
+    st.markdown("<p class='text_gray'>차량 등록 정보를 상세하게 확인하세요</p>", unsafe_allow_html=True)
 
     # -------------------------
     # 검색 바 UI
@@ -132,11 +136,11 @@ def render():
     # -------------------------
     # 상단 요약 + 정렬
     # -------------------------
-    left, right = st.columns([7, 2])
+    left, right = st.columns([7, 2], vertical_alignment="center")
 
     with left:
         left.space("small")
-        st.markdown(f"<p>총 <b>{result['total_count']}</b>건의 등록 정보</p>", unsafe_allow_html=True)
+        st.markdown(f"<p class='text_black'>총 <b>{format(result['total_count'], ',')}</b>건의 등록 정보</p>", unsafe_allow_html=True)
 
     with right:
         st.selectbox("정렬 기준 선택", ["등록일 최신순", "등록 대수 많은순"], label_visibility="collapsed")
@@ -153,4 +157,7 @@ def render():
     # -------------------------
     # 페이지네이션 UI
     # -------------------------
-    render_pagination_ui()
+    _, col_center, _ = st.columns([3, 4, 3])
+
+    with col_center:
+        render_pagination_ui()
