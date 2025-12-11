@@ -4,41 +4,54 @@ from backend.utils.db_utils import fetch_all_dict
 # ============================================================
 # R001 - 최신 리콜 목록 조회
 # ============================================================
-def get_recall_filtered(brand=None, prod_year=None, reg_year=None, reg_month=None,
-                        limit=30, offset=0):
-    """
-    통합 리콜 조회 필터
-    - brand: 제조사 부분일치 검색 (예: "현대", "기아", "벤츠", "BMW")
-    - prod_year: 생산년도 필터 (prod_start_date ~ prod_end_date 범위 포함)
-    - reg_year: 리콜 발표 연도
-    - reg_month: 리콜 발표 월
-    - limit / offset: 페이징 처리
-    """
+def get_recall_list(
+    limit=30,
+    page_num=0,
+    origin_type=None,       # 기존 국내/해외 필터
+    brand=None,             # 제조사 검색
+    prod_year=None,         # 생산년도
+    year=None,          # 리콜 연도
+    month=None,         # 리콜 월
+    search_keyword=None     # 지역/차종 공용 검색어 (검색창 1개)
+):
+    offset = limit * page_num
+
+    domestic_brands = ['기아 주식회사', '현대자동차(주)']
 
     query = """
         SELECT 
-            maker_name,
+            recall_id,
             car_name,
-            target_count,
             remedy_method,
-            recall_date
+            recall_date,
+            maker_name,
+            fix_start_date
         FROM fact_recall
         WHERE 1=1
     """
-
     params = []
 
-    # -------------------------------------------------
-    # 브랜드 검색 (부분일치)
-    # -------------------------------------------------
+    # -----------------------------------------
+    # 기존 국내 / 해외 필터
+    # -----------------------------------------
+    if origin_type == "국내":
+        query += " AND maker_name IN (%s, %s)"
+        params.extend(domestic_brands)
+
+    elif origin_type == "해외":
+        query += " AND maker_name NOT IN (%s, %s)"
+        params.extend(domestic_brands)
+
+    # -----------------------------------------
+    # 브랜드 부분 검색
+    # -----------------------------------------
     if brand:
         query += " AND maker_name LIKE %s"
         params.append(f"%{brand}%")
 
-    # -------------------------------------------------
-    # 생산년도 필터 (포함 범위)
-    # prod_start_date <= prod_year <= prod_end_date
-    # -------------------------------------------------
+    # -----------------------------------------
+    # 생산년도
+    # -----------------------------------------
     if prod_year:
         query += """
             AND YEAR(prod_start_date) <= %s
@@ -47,50 +60,36 @@ def get_recall_filtered(brand=None, prod_year=None, reg_year=None, reg_month=Non
         params.append(prod_year)
         params.append(prod_year)
 
-    # -------------------------------------------------
+    # -----------------------------------------
     # 리콜 발표 연도
-    # -------------------------------------------------
-    if reg_year:
+    # -----------------------------------------
+    if year:
         query += " AND YEAR(recall_date) = %s"
-        params.append(reg_year)
+        params.append(year)
 
-    # -------------------------------------------------
+    # -----------------------------------------
     # 리콜 발표 월
-    # -------------------------------------------------
-    if reg_month:
+    # -----------------------------------------
+    if month:
         query += " AND MONTH(recall_date) = %s"
-        params.append(reg_month)
+        params.append(month)
 
-    # -------------------------------------------------
-    # 최신순 정렬 + 페이징
-    # -------------------------------------------------
+    # -----------------------------------------
+    # 🔥 검색창 1개로 지역/차종 검색 자동 적용
+    # -----------------------------------------
+    if search_keyword:
+        query += " AND (maker_name LIKE %s OR car_name LIKE %s)"
+        params.append(f"%{search_keyword}%")
+        params.append(f"%{search_keyword}%")
+    
+
+    # -----------------------------------------
+    # 최신 순 + 페이징
+    # -----------------------------------------
     query += " ORDER BY recall_date DESC LIMIT %s OFFSET %s"
     params.extend([limit, offset])
 
     return fetch_all_dict(query, tuple(params))
-
-
-# ============================================================
-# R002 - 제조사별 리콜 건수
-# ============================================================
-def get_recall_count_by_maker(limit=None):
-    """
-    제조사별 리콜 건수 집계 (딕셔너리 리스트)
-    """
-    query = """
-        SELECT maker_name, COUNT(*) AS recall_count
-        FROM fact_recall
-        GROUP BY maker_name
-        ORDER BY recall_count DESC
-    """
-
-    if limit is not None:
-        query += " LIMIT %s"
-        return fetch_all_dict(query, (limit,))
-
-    return fetch_all_dict(query)
-
-
 # ============================================================
 # R003 - 차량명별 리콜 건수
 # ============================================================

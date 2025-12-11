@@ -392,73 +392,87 @@ def get_vehicle_count_by_category(year: int, month: int):
 # ============================================================
 # V008 차량 등록 건수 
 # ============================================================
-def get_vehicle_registration_filtered(
+def get_region_total_flow(
     search_type=None,      # "지역" 또는 "차종"
-    search_value=None,     # 시도명 또는 차량유형
-    reg_year=None, 
-    reg_month=None,
-    limit=100,
+    search_value=None,     # 시도명 또는 vehicle_kind
+    year=None, 
+    month=None,
+    search_input=None,     # 자유 검색(지역명/차종명)
+    limit=30, 
     offset=0
 ):
     """
-    차량 등록 현황 필터 검색
+    차량 등록 현황 필터 검색 (자유검색 포함)
     - search_type: "지역" 또는 "차종"
-    - search_value: 시도명 또는 vehicle_kind
-    - reg_year: 등록 연도
-    - reg_month: 등록 월
+    - search_value: 선택값 (지역명 또는 차량유형)
+    - search_input: 입력창에서 검색한 문자열 (지역명 OR 차량유형 부분일치)
+    - year: 등록 연도
+    - month: 등록 월
     """
 
     query = """
         SELECT 
-        s.sido_name,
-        f.vehicle_kind,
-        f.flow_type,
-        CONCAT(f.year, '-', LPAD(f.month, 2, '0')) AS flow_date,
-        sum(f.flow_count) as flow_count 
-    FROM fact_flow_count f
-    JOIN dim_region_sido s ON f.sido_id = s.sido_id
-    JOIN dim_flow_subtype d ON f.subtype_id = d.subtype_id
-    WHERE f.vehicle_kind NOT IN ('None', '합계', 'nan')
-    GROUP BY f.year, f.month, s.sido_name, f.vehicle_kind
+            s.sido_name,
+            f.vehicle_kind,
+            f.flow_type,
+            CONCAT(f.year, '-', LPAD(f.month, 2, '0')) AS flow_date,
+            SUM(f.flow_count) AS flow_count
+        FROM fact_flow_count f
+        JOIN dim_region_sido s ON f.sido_id = s.sido_id
+        JOIN dim_flow_subtype d ON f.subtype_id = d.subtype_id
+        WHERE f.vehicle_kind NOT IN ('None', '합계', 'nan')
     """
 
     params = []
 
-    # ---------------------------------------------------
+    # ---------------------------
     # 1) 검색 유형: 지역
-    # ---------------------------------------------------
+    # ---------------------------
     if search_type == "지역" and search_value:
         query += " AND s.sido_name = %s"
         params.append(search_value)
 
-    # ---------------------------------------------------
-    # 2) 검색 유형: 차종(vehicle_kind)
-    # ---------------------------------------------------
+    # ---------------------------
+    # 2) 검색 유형: 차종
+    # ---------------------------
     if search_type == "차종" and search_value:
         query += " AND f.vehicle_kind = %s"
         params.append(search_value)
 
-    # ---------------------------------------------------
-    # 3) 등록 연도
-    # ---------------------------------------------------
-    if reg_year:
+    # ---------------------------
+    # 3) 자유 검색 (지역명 / 차종 부분검색)
+    # ---------------------------
+    if search_input:
+        query += " AND (s.sido_name LIKE %s OR f.vehicle_kind LIKE %s)"
+        params.append(f"%{search_input}%")
+        params.append(f"%{search_input}%")
+
+    # ---------------------------
+    # 4) 등록 연도
+    # ---------------------------
+    if year:
         query += " AND f.year = %s"
-        params.append(reg_year)
+        params.append(year)
 
-    # ---------------------------------------------------
-    # 4) 등록 월
-    # ---------------------------------------------------
-    if reg_month:
+    # ---------------------------
+    # 5) 등록 월
+    # ---------------------------
+    if month:
         query += " AND f.month = %s"
-        params.append(reg_month)
+        params.append(month)
 
-    # ---------------------------------------------------
-    # 5) 최신순 + 페이징
-    # ---------------------------------------------------
-    query += " ORDER BY f.year DESC, f.month DESC LIMIT %s OFFSET %s"
+    # ---------------------------
+    # GROUP BY + 정렬 + 페이징
+    # ---------------------------
+    query += """
+        GROUP BY f.year, f.month, s.sido_name, f.vehicle_kind, f.flow_type
+        ORDER BY f.year DESC, f.month DESC
+        LIMIT %s OFFSET %s
+    """
     params.extend([limit, offset])
 
     return fetch_all_dict(query, tuple(params))
+
 # ============================================================
 #  V011 - 차량 상세 검색
 # ============================================================
