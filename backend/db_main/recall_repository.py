@@ -4,19 +4,36 @@ from backend.utils.db_utils import fetch_all_dict
 # ============================================================
 # R001 - 최신 리콜 목록 조회
 # ============================================================
-def get_recall_list(limit=30, page_num=0, origin_type=None):
+def get_recall_list(
+    limit=30,
+    page_num=0,
+    origin_type=None,       # 기존 국내/해외 필터
+    brand=None,             # 제조사 검색
+    prod_year=None,         # 생산년도
+    year=None,          # 리콜 연도
+    month=None,         # 리콜 월
+    search_keyword=None     # 지역/차종 공용 검색어 (검색창 1개)
+):
     offset = limit * page_num
 
-    # 국내/해외 매핑 (국내 = 현대+기아)
     domestic_brands = ['기아 주식회사', '현대자동차(주)']
 
     query = """
-        SELECT recall_id, car_name, remedy_method, recall_date, maker_name,fix_start_date
+        SELECT 
+            recall_id,
+            car_name,
+            remedy_method,
+            recall_date,
+            maker_name,
+            fix_start_date
         FROM fact_recall
         WHERE 1=1
     """
     params = []
 
+    # -----------------------------------------
+    # 기존 국내 / 해외 필터
+    # -----------------------------------------
     if origin_type == "국내":
         query += " AND maker_name IN (%s, %s)"
         params.extend(domestic_brands)
@@ -25,33 +42,54 @@ def get_recall_list(limit=30, page_num=0, origin_type=None):
         query += " AND maker_name NOT IN (%s, %s)"
         params.extend(domestic_brands)
 
+    # -----------------------------------------
+    # 브랜드 부분 검색
+    # -----------------------------------------
+    if brand:
+        query += " AND maker_name LIKE %s"
+        params.append(f"%{brand}%")
+
+    # -----------------------------------------
+    # 생산년도
+    # -----------------------------------------
+    if prod_year:
+        query += """
+            AND YEAR(prod_start_date) <= %s
+            AND YEAR(prod_end_date) >= %s
+        """
+        params.append(prod_year)
+        params.append(prod_year)
+
+    # -----------------------------------------
+    # 리콜 발표 연도
+    # -----------------------------------------
+    if year:
+        query += " AND YEAR(recall_date) = %s"
+        params.append(year)
+
+    # -----------------------------------------
+    # 리콜 발표 월
+    # -----------------------------------------
+    if month:
+        query += " AND MONTH(recall_date) = %s"
+        params.append(month)
+
+    # -----------------------------------------
+    # 🔥 검색창 1개로 지역/차종 검색 자동 적용
+    # -----------------------------------------
+    if search_keyword:
+        query += " AND (maker_name LIKE %s OR car_name LIKE %s)"
+        params.append(f"%{search_keyword}%")
+        params.append(f"%{search_keyword}%")
+    
+
+    # -----------------------------------------
+    # 최신 순 + 페이징
+    # -----------------------------------------
     query += " ORDER BY recall_date DESC LIMIT %s OFFSET %s"
     params.extend([limit, offset])
 
-    return fetch_all_dict(query, params)
-
-
-# ============================================================
-# R002 - 제조사별 리콜 건수
-# ============================================================
-def get_recall_count_by_maker(limit=None):
-    """
-    제조사별 리콜 건수 집계 (딕셔너리 리스트)
-    """
-    query = """
-        SELECT maker_name, COUNT(*) AS recall_count
-        FROM fact_recall
-        GROUP BY maker_name
-        ORDER BY recall_count DESC
-    """
-
-    if limit is not None:
-        query += " LIMIT %s"
-        return fetch_all_dict(query, (limit,))
-
-    return fetch_all_dict(query)
-
-
+    return fetch_all_dict(query, tuple(params))
 # ============================================================
 # R003 - 차량명별 리콜 건수
 # ============================================================
@@ -288,5 +326,73 @@ def filter_foreign_recalls(prod_year=None, reg_year=None, reg_month=None):
         params.append(reg_month)
 
     query += " ORDER BY recall_date DESC"
+
+    return fetch_all_dict(query, tuple(params))
+
+
+# ============================================================
+# R010 - 리콜 필터 (해외)
+# ============================================================
+
+def filter_all_recalls(brand=None, prod_year=None, reg_year=None, reg_month=None,
+                       limit=30, offset=0):
+    """
+    전체 리콜 필터 (국내 + 해외)
+    - brand: 제조사 검색 (부분일치)
+    - prod_year: 생산년도 필터 (prod_start_date ~ prod_end_date 사이)
+    - reg_year: 리콜 발표 연도
+    - reg_month: 리콜 발표 월
+    - limit / offset: 페이징
+    """
+
+    query = """
+        SELECT 
+            maker_name,
+            car_name,
+            target_count,
+            remedy_method,
+            recall_date
+        FROM fact_recall
+        WHERE 1=1
+    """
+
+    params = []
+
+    # -------------------------------------------------------
+    # 제조사명 (부분일치)
+    # -------------------------------------------------------
+    if brand:
+        query += " AND maker_name LIKE %s"
+        params.append(f"%{brand}%")
+
+    # -------------------------------------------------------
+    # 생산년도 필터
+    # -------------------------------------------------------
+    if prod_year:
+        query += """
+            AND YEAR(prod_start_date) <= %s
+            AND YEAR(prod_end_date) >= %s
+        """
+        params.extend([prod_year, prod_year])
+
+    # -------------------------------------------------------
+    # 리콜 발표 연도 필터
+    # -------------------------------------------------------
+    if reg_year:
+        query += " AND YEAR(recall_date) = %s"
+        params.append(reg_year)
+
+    # -------------------------------------------------------
+    # 리콜 발표 월 필터
+    # -------------------------------------------------------
+    if reg_month:
+        query += " AND MONTH(recall_date) = %s"
+        params.append(reg_month)
+
+    # -------------------------------------------------------
+    # 최신순 정렬 + 페이징 적용
+    # -------------------------------------------------------
+    query += " ORDER BY recall_date DESC LIMIT %s OFFSET %s"
+    params.extend([limit, offset])
 
     return fetch_all_dict(query, tuple(params))

@@ -85,8 +85,7 @@ def get_inheritance_gift_top3_regions():
     - 차량 등록량(flow_count)이 가장 큰 상위 3개 지역 자동 선택
     - 각 지역별 상속/증여 등록수, 전달 대비 증감률, 최빈 연령대 반환
     """
-
-    # 1️⃣ 최신 연/월 조회
+    # 1최신 연/월 조회
     latest_query = """
         SELECT year, month
         FROM fact_flow_count
@@ -100,11 +99,11 @@ def get_inheritance_gift_top3_regions():
     year = latest['year']
     month = latest['month']
 
-    # 🔄 전달 year/month 계산
+    # 전달 year/month 계산
     prev_year = year if month > 1 else year - 1
     prev_month = month - 1 if month > 1 else 12
 
-    # 2️⃣ 전체 지역 중 flow_count TOP 3 지역 찾기
+    # 전체 지역 중 flow_count TOP 3 지역 찾기
     top3_query = """
         SELECT 
             s.sido_name,
@@ -120,7 +119,7 @@ def get_inheritance_gift_top3_regions():
 
     results = []
 
-    # 3️⃣ TOP3 지역 각각 분석
+    #  TOP3 지역 각각 분석
     for region_row in top_regions:
         sido_name = region_row["sido_name"]
 
@@ -173,9 +172,7 @@ def get_inheritance_gift_top3_regions():
 # ============================================================
 
 def get_owner_count_by_region(year: int, month: int):
-    """
-    O004 – 지역별 소유자 분포
-    """
+    
 
     query = """
         SELECT 
