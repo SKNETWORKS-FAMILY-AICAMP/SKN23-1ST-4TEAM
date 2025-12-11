@@ -4,7 +4,7 @@ import mysql.connector
 from collections import defaultdict
 
 # 파일만 바꿔서 월별로 실행
-EXCEL_PATH = "2024년_10월_자동차_등록자료_통계.xlsx"
+EXCEL_PATH = "2025년_11월_자동차_등록자료_통계.xlsx"
 
 # SSH 터널 기준: 127.0.0.1:3307 -> (EC2) -> RDS:3306
 DB = {

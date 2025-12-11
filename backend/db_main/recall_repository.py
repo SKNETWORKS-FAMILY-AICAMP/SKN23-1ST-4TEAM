@@ -163,3 +163,130 @@ def get_top_recall_reasons(rows, n=5):
     리콜 사유별 발생 Top N (딕셔너리 리스트 반환)
     """
     return sorted(rows, key=lambda x: x['count'], reverse=True)[:n]
+
+
+
+
+# ============================================================
+# R009 - 리콜 필터 (국내)
+# ============================================================
+def filter_domestic_recalls(brand=None, prod_year=None, reg_year=None, reg_month=None):
+    """
+    국내 리콜 필터 검색 (현대/기아만 조회 가능)
+    - brand: '현대', '기아' 만 허용
+    """
+
+    # --------------------------
+    # 1) 브랜드 유효성 검사
+    # --------------------------
+    allowed_brands = ["현대", "기아"]
+
+    if not brand:
+        return []  # 브랜드 미입력 → 조회 불가
+
+    # 입력한 브랜드가 allowed 에 없다면 무조건 빈 결과
+    if brand not in allowed_brands:
+        return []
+
+    # --------------------------
+    # 2) 기본 쿼리
+    # --------------------------
+    query = """
+        SELECT 
+            maker_name,
+            car_name,
+            target_count,
+            remedy_method,
+            recall_date
+        FROM fact_recall
+        WHERE 1=1
+    """
+
+    params = []
+
+    # --------------------------
+    # 3) 브랜드 필터 (LIKE)
+    # --------------------------
+    # maker_name 은 "현대자동차(주)" "기아 주식회사" 등이라 부분일치 필요
+    query += " AND maker_name LIKE %s"
+    params.append(f"%{brand}%")
+
+    # --------------------------
+    # 4) 생산년도 필터
+    # --------------------------
+    if prod_year:
+        query += """
+            AND YEAR(prod_start_date) <= %s
+            AND YEAR(prod_end_date) >= %s
+        """
+        params.append(prod_year)
+        params.append(prod_year)
+
+    # --------------------------
+    # 5) 리콜 연도
+    # --------------------------
+    if reg_year:
+        query += " AND YEAR(recall_date) = %s"
+        params.append(reg_year)
+
+    # --------------------------
+    # 6) 리콜 월
+    # --------------------------
+    if reg_month:
+        query += " AND MONTH(recall_date) = %s"
+        params.append(reg_month)
+
+    # --------------------------
+    # 7) 최신순
+    # --------------------------
+    query += " ORDER BY recall_date DESC"
+
+    return fetch_all_dict(query, tuple(params))
+
+# ============================================================
+# R010 - 리콜 필터 (해외)
+# ============================================================
+def filter_foreign_recalls(prod_year=None, reg_year=None, reg_month=None):
+    """
+    해외 브랜드 리콜 필터 (현대/기아 제외)
+    """
+
+    domestic_brands = [
+        "현대자동차(주)",
+        "기아 주식회사"
+    ]
+
+    query = """
+        SELECT 
+            maker_name,
+            car_name,
+            target_count,
+            remedy_method,
+            recall_date
+        FROM fact_recall
+        WHERE maker_name NOT IN (%s, %s)
+    """
+
+    params = domestic_brands[:]  # 현대, 기아 제외 조건
+
+    # 생산년도 필터
+    if prod_year:
+        query += """
+            AND YEAR(prod_start_date) <= %s
+            AND YEAR(prod_end_date) >= %s
+        """
+        params += [prod_year, prod_year]
+
+    # 리콜 년도
+    if reg_year:
+        query += " AND YEAR(recall_date) = %s"
+        params.append(reg_year)
+
+    # 리콜 월
+    if reg_month:
+        query += " AND MONTH(recall_date) = %s"
+        params.append(reg_month)
+
+    query += " ORDER BY recall_date DESC"
+
+    return fetch_all_dict(query, tuple(params))
