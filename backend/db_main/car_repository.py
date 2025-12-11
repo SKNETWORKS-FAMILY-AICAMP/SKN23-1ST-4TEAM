@@ -393,13 +393,13 @@ def get_vehicle_count_by_category(year: int, month: int):
 # V008 차량 등록 건수 
 # ============================================================
 def get_vehicle_flow_summary_by_region(
+    limit=30, 
+    offset=0,
     search_type=None,      # "지역" 또는 "차종"
     search_value=None,     # 시도명 또는 vehicle_kind
     year=None, 
     month=None,
-    search_input=None,     # 자유 검색(지역명/차종명)
-    limit=30, 
-    offset=0
+    search_input=None    # 자유 검색(지역명/차종명)
 ):
     """
     차량 등록 현황 필터 검색 (자유검색 포함)

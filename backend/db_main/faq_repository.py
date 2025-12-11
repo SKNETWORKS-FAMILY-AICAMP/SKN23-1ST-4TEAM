@@ -3,7 +3,7 @@ from backend.utils.db_utils import fetch_all_dict
 # ============================================================
 #  Q001 - 모든 FAQ를 최신 업데이트순으로 조회 (필터 추가 )
 # ============================================================
-def get_all_faq_latest(brand=None, keyword=None, limit=30, offset=0):
+def get_all_faq_latest(limit=30, offset=0,brand=None, keyword=None):
     """
     Q001 + Q002 통합 FAQ 조회
     - 조건 없음 → 최신순 전체 FAQ 조회 (Q001)
