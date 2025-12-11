@@ -13,19 +13,30 @@ rows = {
 }
 
 result = get_vehicle_flow_summary_by_region(ROW_COUNT)
+year_set = {}
 
 for row in result['rows']:
+    year_set.add(row['year'])
+
     rows['등록년월'].append(f"{row['year']}년 {row['month']}월")
     rows['지역'].append(row['sido_name'])
     rows['차량종류'].append(row['vehicle_kind'])
     rows['등록대수'].append(format(row['total_flow_count'], ','))
+
+year_list = list(year_set)
 
 TOTAL_PAGES = math.ceil(result['total_count'] / ROW_COUNT)
 
 def call_registration(page_num):
     return get_vehicle_flow_summary_by_region(ROW_COUNT, page_num-1)
 
-# 세션 상태 초기화 (현재 페이지 번호)
+def search_filters(search_type, search_value, year, month, keyword):
+    if search_type:
+
+        get_vehicle_flow_summary_by_region()
+        # get_vehicle_registration_filtered()
+
+# Pagenation
 if 'current_page' not in st.session_state:
     st.session_state['current_page'] = 1
 
@@ -115,11 +126,19 @@ def render():
         with col1:
             search_type = st.selectbox(" ", ["검색 유형 선택", "지역", "차종"], label_visibility="collapsed")
         with col2:
-            search_value = st.selectbox(" ", ["유형 값 선택", "서울특별시", "경기도", "부산광역시"], label_visibility="collapsed")
+            if search_type == "지역":
+                search_value = st.selectbox(" ", ["광역시/도 선택"] + rows['지역'], label_visibility="collapsed")
+            elif search_type == "차종":
+                search_value = st.selectbox(" ", ["유형 값 선택", "승용", "승합", "화물", "특수"], label_visibility="collapsed")
+            else:
+                search_value = st.selectbox(" ", ["유형 값 선택"], label_visibility="collapsed", disabled=True)
         with col3:
-            year = st.selectbox(" ", ["등록 년 선택", "2025", "2024", "2023"], label_visibility="collapsed")
+            year = st.selectbox(" ", ["등록 년 선택"] + year_list, label_visibility="collapsed")
         with col4:
-            month = st.selectbox(" ", ["등록 월 선택"] + [f"{i:02d}" for i in range(1, 13)], label_visibility="collapsed")
+            if year == "등록 년 선택":
+                month = st.selectbox(" ", ["등록 월 선택"], label_visibility="collapsed", disabled=True)
+            else:
+                month = st.selectbox(" ", ["등록 월 선택"] + [f"{i:02d}" for i in range(1, 13)], label_visibility="collapsed")
         with col5:
             keyword = st.text_input(
                 " ",
@@ -127,7 +146,7 @@ def render():
                 label_visibility="collapsed"
             )
         with col6:
-            submit_btn = st.form_submit_button("검색")
+            st.button("검색", on_click=search_filters(search_type, search_value, year, month, keyword))
 
     df = pd.DataFrame(rows)
 

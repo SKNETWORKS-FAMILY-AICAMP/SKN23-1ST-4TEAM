@@ -5,6 +5,9 @@ page = 0
 
 result = get_all_faq_latest()
 
+def search_filters():
+    get_all_faq_latest()
+
 # 더보기
 def click_more_btn():
     global page
@@ -28,7 +31,7 @@ def render():
         col1, col2, col3 = st.columns([3.5, 5.5, 1])
 
         with col1:
-            search_type = st.selectbox(" ", ["브랜드 선택", "현대", "기아", "BMW", "BENZ"], label_visibility="collapsed")
+            brand_name = st.selectbox(" ", ["브랜드 선택", "현대", "기아", "BMW", "BENZ"], label_visibility="collapsed")
         with col2:
             keyword = st.text_input(
                 " ",
@@ -36,7 +39,7 @@ def render():
                 label_visibility="collapsed"
             )
         with col3:
-            submit_btn = st.form_submit_button("검색")
+            st.button("검색", on_click=search_filters(brand_name, keyword))
 
     for item in result:
         expander_title = f"[ {item['brand']} ] {item['question']}"

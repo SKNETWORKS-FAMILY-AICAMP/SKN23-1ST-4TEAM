@@ -7,6 +7,17 @@ list_count = 10
 
 result = get_recall_list(list_count, page)
 
+def brand_list():
+    list = []
+
+    for row in result:
+        list.append(row['maker_name'])
+
+    return list
+
+def search_filters():
+    get_recall_list(list_count, page)
+
 # 더보기
 def click_more_btn():
     global page, list_count
@@ -25,11 +36,11 @@ def render():
         col1, col2, col3, col4, col5, col6 = st.columns([1.2, 1.2, 1.2, 1.2, 3, 1])
 
         with col1:
-            search_type = st.selectbox(" ", ["브랜드 선택", "현대", "기아", "BMW", "벤츠"], label_visibility="collapsed")
+            search_type = st.selectbox(" ", ["브랜드 선택"] + brand_list, label_visibility="collapsed")
         with col2:
-            search_value = st.selectbox(" ", ["생산년도 선택", "2025", "2024", "2023"], label_visibility="collapsed")
+            search_value = st.number_input("생산 년도 입력")
         with col3:
-            year = st.selectbox(" ", ["등록 년 선택", "2025", "2024", "2023"], label_visibility="collapsed")
+            year = st.selectbox(" ", ["등록 년 선택"] + [f"{i:02d}" for i in range(2025, 2020, -1)], label_visibility="collapsed")
         with col4:
             month = st.selectbox(" ", ["등록 월 선택"] + [f"{i:02d}" for i in range(1, 13)], label_visibility="collapsed")
         with col5:
@@ -39,15 +50,15 @@ def render():
                 label_visibility="collapsed"
             )
         with col6:
-            submit_btn = st.form_submit_button("검색")
+            st.button("검색", on_click=search_filters(search_type, search_value, year, month, keyword))
 
     # -------------------------
     # 상단 요약 + 정렬
     # -------------------------
-    left, right = st.columns([7, 2])
+    _, right = st.columns([7, 2])
 
-    with left:
-        st.markdown(f"<p class='text_black'>총 <b>{len(result)}</b>건의 리콜 정보</p>", unsafe_allow_html=True)
+    # with left:
+        # st.markdown(f"<p class='text_black'>총 <b>{len(result)}</b>건의 리콜 정보</p>", unsafe_allow_html=True)
 
     with right:
         sort_opt = st.selectbox(" ", ["정렬 기준 선택", "등록일 최신순", "등록 대수 많은순"], label_visibility="collapsed")
@@ -59,7 +70,7 @@ def render():
             <div class='text_black' style="border: 1px solid #D7D7D7; border-radius: 8px; padding: 15px; margin-bottom: 10px; line-height: 1.5;">
                 <div>
                     <b style="margin: 0;">{row['maker_name']}</b>
-                    <span style="float: right; margin-right: 6px;">시행일자: {row['fix_start_date']}</span>
+                    <span style="float: right; margin-right: 6px; font-size: 0.9em; color: #555;">시행일자: {row['fix_start_date']}</span>
                 </div>
                 <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #555;">{row['car_name']}</p>
                 <p style="margin: 5px 0 0 0; font-size: 0.9em;">{row['remedy_method']}</p>
