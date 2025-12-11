@@ -19,10 +19,10 @@ base =
 primaryColor =
 
 # Background color of the app.
-backgroundColor = "#F1F1F3"
+backgroundColor = "#F0F0F0"
 
 # Background color used for most interactive widgets.
-secondaryBackgroundColor = 
+secondaryBackgroundColor = "#F0F0F0"
 
 # Color used for almost all text.
 textColor = "#242424"
@@ -35,7 +35,7 @@ textColor = "#242424"
 # If `redColor` is provided, and `redBackgroundColor` isn't, then
 # `redBackgroundColor` will be derived from `redColor` using 10%
 # opacity for the light theme and 20% opacity for the dark theme.
-redColor = "#DB403E"
+redColor = "#EF4444"
 
 # Orange color used in the basic color palette.
 #
@@ -65,7 +65,7 @@ yellowColor =
 # If a `blueColor` is provided, and `blueBackgroundColor` isn't, then
 # `blueBackgroundColor` will be derived from `blueColor` using 10%
 # opacity for the light theme and 20% opacity for the dark theme.
-blueColor = "#165DFB"
+blueColor = "#3A7BFF"
 
 # Green color used in the basic color palette.
 #
@@ -75,7 +75,7 @@ blueColor = "#165DFB"
 # If `greenColor` is provided, and `greenBackgroundColor` isn't, then
 # `greenBackgroundColor` will be derived from `greenColor` using 10%
 # opacity for the light theme and 20% opacity for the dark theme.
-greenColor = "#2AA971"
+greenColor = "#22C55E"
 
 # Violet color used in the basic color palette.
 #
@@ -94,7 +94,7 @@ violetColor = "#7331DE"
 # If `grayColor` is provided, and `grayBackgroundColor` isn't, then
 # `grayBackgroundColor` will be derived from `grayColor` using 10%
 # opacity for the light theme and 20% opacity for the dark theme.
-grayColor = "#BDBDBD"
+grayColor = "#7C7C7C"
 
 # Red background color used in the basic color palette.
 #
@@ -157,7 +157,7 @@ violetBackgroundColor = rgba(115,49,222,0.1)
 #
 # Otherwise, this is #31333f with 10% opacity for the light theme and
 # #808495 with 20% opacity for the dark theme.
-grayBackgroundColor = "#F1F1F3"
+grayBackgroundColor = "#F0F0F0"
 
 # Red text color used for the basic color palette.
 #
@@ -166,7 +166,7 @@ grayBackgroundColor = "#F1F1F3"
 #
 # Otherwise, this is #bd4043 for the light theme and #ff6c6c for the dark
 # theme.
-redTextColor = "#DB403E"
+redTextColor = "#EF4444"
 
 # Orange text color used for the basic color palette.
 #
@@ -193,7 +193,7 @@ yellowTextColor =
 #
 # Otherwise, this is #0054a3 for the light theme and #3d9df3 for the dark
 # theme.
-blueTextColor = "#165DFB"
+blueTextColor = "#3A7BFF"
 
 # Green text color used for the basic color palette.
 #
@@ -202,7 +202,7 @@ blueTextColor = "#165DFB"
 #
 # Otherwise, this is #158237 for the light theme and #5ce488 for the dark
 # theme.
-greenTextColor = "#2AA971"
+greenTextColor = "#22C55E"
 
 # Violet text color used for the basic color palette.
 #
@@ -220,7 +220,7 @@ violetTextColor = "#7331DE"
 #
 # Otherwise, this is #31333f with 60% opacity for the light theme and
 # #fafafa with 60% opacity for the dark theme.
-grayTextColor = "#BDBDBD"
+grayTextColor = "#7C7C7C"
 
 # Color used for all links.
 #
@@ -434,7 +434,7 @@ borderColor = "10px"
 # The color of the border around dataframes and tables.
 #
 # If this isn't set, Streamlit uses `theme.borderColor` instead.
-dataframeBorderColor = "#F7F7F7"
+dataframeBorderColor = "#D7D7D7"
 
 # The background color of the dataframe's header.
 #
@@ -446,11 +446,11 @@ dataframeBorderColor = "#F7F7F7"
 dataframeHeaderBackgroundColor = "#FFFFFF"
 
 # Whether to show a border around input widgets.
-showWidgetBorder = "#F7F7F7"
+showWidgetBorder = "#D7D7D7"
 
 # Whether to show a vertical separator between the sidebar and the main
 # content area.
-showSidebarBorder = "#F7F7F7"
+showSidebarBorder = "#D7D7D7"
 
 # An array of colors to use for categorical chart data.
 #

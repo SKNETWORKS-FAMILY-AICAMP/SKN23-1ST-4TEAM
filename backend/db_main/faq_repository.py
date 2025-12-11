@@ -43,3 +43,13 @@ def get_all_faq_latest(limit=30, offset=0,brand=None, keyword=None):
     params.extend([limit, offset])
 
     return fetch_all_dict(query, tuple(params))
+
+def get_faq_brand_count():
+    query = """
+        SELECT brand, count(*) as count
+        FROM faq
+        GROUP BY brand
+        ORDER BY brand
+    """
+    
+    return fetch_all_dict(query)

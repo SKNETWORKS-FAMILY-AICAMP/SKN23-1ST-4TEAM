@@ -415,6 +415,7 @@ def get_vehicle_flow_summary_by_region(
             s.sido_name,
             f.vehicle_kind,
             f.flow_type,
+            f.year,
             CONCAT(f.year, '-', LPAD(f.month, 2, '0')) AS flow_date,
             SUM(f.flow_count) AS flow_count
         FROM fact_flow_count f
