@@ -392,7 +392,7 @@ def get_vehicle_count_by_category(year: int, month: int):
 # ============================================================
 # V008 차량 등록 건수 
 # ============================================================
-def get_region_total_flow(
+def get_vehicle_flow_summary_by_region(
     search_type=None,      # "지역" 또는 "차종"
     search_value=None,     # 시도명 또는 vehicle_kind
     year=None, 
