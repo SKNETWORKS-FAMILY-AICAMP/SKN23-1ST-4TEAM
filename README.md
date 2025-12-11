@@ -20,6 +20,8 @@
 
 # 👥 프로젝트 팀 및 역할  
 
+### 팀명: 무한상사
+
 | 정유선 | 강승원 | 송주엽 | 신승훈 |
 |:----------:|:----------:|:----------:|:----------:|
 | <img src="assets\images\유부장.jpg" alt="정유선" width="200" height="150" />  | <img src="assets\images\정과장.jpg" alt="강승원" width="140" height="150" />  | <img src="assets\images\하사원.jpg" alt="송주엽" width="150" height="150" /> | <img src="assets\images\길인턴.jpg" alt="신승훈" width="150" height="150" />
@@ -101,7 +103,16 @@
 <img src="assets\images\db server3.jpg">
 
 
+---
+# 📄참고 자료
 
+[노션 바로가기]
+
+
+[노션 바로가기]: https://www.notion.so/2c15b4cf83ab8053b1c4ffa904342e6b?v=2c15b4cf83ab80eebddb000ca1f45b53&source=copy_link
+
+
+---
 ## 💬 팀원별 회고
 
 ###  팀장 - 정유선
