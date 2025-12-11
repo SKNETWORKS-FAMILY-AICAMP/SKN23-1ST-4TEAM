@@ -5,8 +5,8 @@ page = 0
 
 result = get_all_faq_latest()
 
-def search_filters():
-    get_all_faq_latest()
+def search_filters(brand_name, keyword):
+    get_all_faq_latest(30, 0, brand_name, keyword)
 
 # 더보기
 def click_more_btn():
@@ -39,7 +39,7 @@ def render():
                 label_visibility="collapsed"
             )
         with col3:
-            st.button("검색", on_click=search_filters(brand_name, keyword))
+            st.form_submit_button("검색", on_click=search_filters(brand_name, keyword))
 
     for item in result:
         expander_title = f"[ {item['brand']} ] {item['question']}"

@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from backend.db_main.recall_repository import get_recall_list
-from backend.db_main.flow_repository import get_vehicle_flow_summary_by_region
+from backend.db_main.car_repository import get_vehicle_flow_summary_by_region
 
 # 버튼 이동 이벤트
 def move_page(target_page):
@@ -18,15 +18,15 @@ rows = {
 
 result = get_vehicle_flow_summary_by_region(5)
 
-for row in result['rows']:
-    rows['등록년월'].append(f"{row['year']}년 {row['month']}월")
+for row in result:
+    rows['등록년월'].append(f"{row['flow_date']}")
     rows['지역'].append(row['sido_name'])
     rows['차량종류'].append(row['vehicle_kind'])
-    rows['등록대수'].append(format(row['total_flow_count'], ','))
+    rows['등록대수'].append(format(row['flow_count'], ','))
 
 # 리콜
-k_recall_result = get_recall_list(5, 1, '국내')
-o_recall_result = get_recall_list(5, 1, '해외')
+k_recall_result = get_recall_list(5, 0, '국내')
+o_recall_result = get_recall_list(5, 0, '해외')
 
 def render():
     st.markdown("<h2>자동차 정보</h2>", unsafe_allow_html=True)

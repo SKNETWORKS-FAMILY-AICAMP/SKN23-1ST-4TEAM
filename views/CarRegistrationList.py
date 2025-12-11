@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import math
 
-from backend.db_main.flow_repository import get_vehicle_flow_summary_by_region
+from backend.db_main.car_repository import get_vehicle_flow_summary_by_region
 
 ROW_COUNT = 10
 rows = {
@@ -13,28 +13,35 @@ rows = {
 }
 
 result = get_vehicle_flow_summary_by_region(ROW_COUNT)
-year_set = {}
+year_set = []
 
-for row in result['rows']:
-    year_set.add(row['year'])
+for row in result:
+    if row['year'] not in year_set:
+        year_set.append(row['year'])
 
-    rows['등록년월'].append(f"{row['year']}년 {row['month']}월")
+    rows['등록년월'].append(f"{row['flow_date']}")
     rows['지역'].append(row['sido_name'])
     rows['차량종류'].append(row['vehicle_kind'])
-    rows['등록대수'].append(format(row['total_flow_count'], ','))
+    rows['등록대수'].append(format(row['flow_count'], ','))
 
 year_list = list(year_set)
 
-TOTAL_PAGES = math.ceil(result['total_count'] / ROW_COUNT)
+TOTAL_PAGES = math.ceil(result[0]['flow_count'] / ROW_COUNT)
 
 def call_registration(page_num):
     return get_vehicle_flow_summary_by_region(ROW_COUNT, page_num-1)
 
 def search_filters(search_type, search_value, year, month, keyword):
-    if search_type:
+    if search_type == "검색 유형 선택":
+        search_type = None
+        search_value = None
+    if year == "등록 년 선택":
+        year = None
+        month = None
+    if keyword == " ":
+        keyword = None
 
-        get_vehicle_flow_summary_by_region()
-        # get_vehicle_registration_filtered()
+        get_vehicle_flow_summary_by_region(ROW_COUNT, 0, search_type, search_value, year, month, keyword)
 
 # Pagenation
 if 'current_page' not in st.session_state:
@@ -146,7 +153,7 @@ def render():
                 label_visibility="collapsed"
             )
         with col6:
-            st.button("검색", on_click=search_filters(search_type, search_value, year, month, keyword))
+            st.form_submit_button("검색", on_click=search_filters(search_type, search_value, year, month, keyword))
 
     df = pd.DataFrame(rows)
 
@@ -159,7 +166,7 @@ def render():
 
     with left:
         left.space("small")
-        st.markdown(f"<p class='text_black'>총 <b>{format(result['total_count'], ',')}</b>건의 등록 정보</p>", unsafe_allow_html=True)
+        st.markdown(f"<p class='text_black'>총 <b>{format(result[0]['flow_count'], ',')}</b>건의 등록 정보</p>", unsafe_allow_html=True)
 
     with right:
         st.selectbox("정렬 기준 선택", ["등록일 최신순", "등록 대수 많은순"], label_visibility="collapsed")

@@ -5,40 +5,35 @@ from backend.db_main.recall_repository import get_recall_list
 page = 0
 list_count = 10
 
-result = get_recall_list(list_count, page)
+recall_result = get_recall_list(list_count, page)
 
-def brand_list():
-    list = []
-
-    for row in result:
-        list.append(row['maker_name'])
-
-    return list
-
-def search_filters():
-    get_recall_list(list_count, page)
+def search_filters(search_type, search_value, year, month, keyword):
+    global list_count, page, recall_result
+    recall_result = get_recall_list(list_count, page, None, search_type, search_value, year, month, keyword)
 
 # 더보기
 def click_more_btn():
-    global page, list_count
+    global page, list_count, recall_result
 
     page += 1
     add_data = get_recall_list(list_count, page)
-    result.extend(add_data)
+    recall_result.extend(add_data)
 
 
 def render():
+    global recall_result
     st.markdown("<h2>리콜 목록</h2>", unsafe_allow_html=True)
     st.markdown("<p class='text_gray'>리콜 정보를 확인하고 조치 방법을 안내받으세요.</p>", unsafe_allow_html=True)
 
     # 검색 바 UI -------------------------
     with st.form("search_form"):
-        col1, col2, col3, col4, col5, col6 = st.columns([1.2, 1.2, 1.2, 1.2, 3, 1])
+        col1, col3, col4, col5, col6 = st.columns([1.6, 1.6, 1.6, 3, 1])
+        search_value = None
 
         with col1:
-            search_type = st.selectbox(" ", ["브랜드 선택"] + brand_list, label_visibility="collapsed")
-        with col2:
-            search_value = st.number_input("생산 년도 입력")
+            search_type = st.selectbox(" ", ["브랜드 선택","(주)볼보자동차코리아","기아 주식회사","르노코리아(주)","메르세데스벤츠코리아(주)","비엠더블유코리아(주)","포르쉐코리아 주식회사","현대자동차(주)"], label_visibility="collapsed")
+        # with col2:
+        #     search_value = st.number_input(placeholder="생산 년도 입력")
         with col3:
             year = st.selectbox(" ", ["등록 년 선택"] + [f"{i:02d}" for i in range(2025, 2020, -1)], label_visibility="collapsed")
         with col4:
@@ -50,7 +45,7 @@ def render():
                 label_visibility="collapsed"
             )
         with col6:
-            st.button("검색", on_click=search_filters(search_type, search_value, year, month, keyword))
+            st.form_submit_button("검색", on_click=search_filters(search_type, search_value, year, month, keyword))
 
     # -------------------------
     # 상단 요약 + 정렬
@@ -58,7 +53,7 @@ def render():
     _, right = st.columns([7, 2])
 
     # with left:
-        # st.markdown(f"<p class='text_black'>총 <b>{len(result)}</b>건의 리콜 정보</p>", unsafe_allow_html=True)
+        # st.markdown(f"<p class='text_black'>총 <b>{len(recall_result)}</b>건의 리콜 정보</p>", unsafe_allow_html=True)
 
     with right:
         sort_opt = st.selectbox(" ", ["정렬 기준 선택", "등록일 최신순", "등록 대수 많은순"], label_visibility="collapsed")
@@ -79,7 +74,10 @@ def render():
             unsafe_allow_html=True
         )
 
-    for row in result:
+    recall_result = get_recall_list(list_count, page)   
+
+    for row in recall_result:
+        print(row)
         create_recall_card(row)
 
     # 더보기 버튼
