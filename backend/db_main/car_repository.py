@@ -471,7 +471,18 @@ def get_region_total_flow(
     """
     params.extend([limit, offset])
 
-    return fetch_all_dict(query, tuple(params))
+    rows = fetch_all_dict(query, tuple(params))
+
+    # -----------------------------------------
+    # 🔥 flow_count 를 int 로 변환 후 반환
+    # -----------------------------------------
+    for r in rows:
+        try:
+            r["flow_count"] = int(r["flow_count"])
+        except:
+            r["flow_count"] = 0
+
+    return rows
 
 # ============================================================
 #  V011 - 차량 상세 검색

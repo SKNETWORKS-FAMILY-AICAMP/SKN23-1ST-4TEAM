@@ -10,4 +10,3 @@ try:
 finally:
     close_connection(conn)
 
-ㄴ
