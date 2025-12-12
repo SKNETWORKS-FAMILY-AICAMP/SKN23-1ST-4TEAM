@@ -140,12 +140,6 @@ TODO...add image
 ---
 
 ## 프로젝트 구조
-
-TODO...
-
-
-## 모듈 구조/명세서
-
 ```
 project_1st_4team/
 ├── .venv/                         # 가상 환경 (git X )
@@ -193,6 +187,11 @@ project_1st_4team/
 ├── streamlit_app.py               # Streamlit 메인 앱 시작 파일
 ├── requirements.txt               # 프로젝트 의존성 목록
 └── README.md                      # 프로젝트 문서
+```
+## 모듈 구조/명세서
+
+```
+
 ```
 ---
 
