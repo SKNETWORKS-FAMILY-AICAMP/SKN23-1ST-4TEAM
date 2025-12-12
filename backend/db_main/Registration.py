@@ -22,7 +22,7 @@ def get_new_vehicle_count(year, month):
 
     value = result["new_vehicle_count"]
 
-    # Decimal → int 변환
+    # Decimal → int 변환get_total_new_registrations
     if isinstance(value, Decimal):
         value = int(value)
 
