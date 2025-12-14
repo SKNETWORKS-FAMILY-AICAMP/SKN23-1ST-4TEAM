@@ -209,10 +209,10 @@ project_1st_4team/
 │   ├── owner_repository.py
 │   └── recall_repository.py       # 리콜 DB 저장/조회  
 │
-├── project_crawling/              # 크롤링 스크립트 폴더
-│   ├── benz.py
-│   ├── hyundai.py
-│   └── kia_faq.py
+├── project_crawling/              # 크롤링 스크립트 폴더 모음
+│   ├── benz.py                    # 더보기 버튼 클릭 처리
+│   ├── hyundai.py                # 페이지별 FAQ 항목 반복 추출
+│   └── kia_faq.py                 # 질문/답변 추출 및 CSV 저장
 │
 ├── assets/                        # 정적 파일 모음
 │   ├── car_excel_files/           # 자동차 등록 통계 엑셀 파일
@@ -348,6 +348,23 @@ mysql -h skn23-1st-4team.cr6u26mg6lbq.eu-north-1.rds.amazonaws.com -u admin -p
 
 [노션 바로가기](https://www.notion.so/2c15b4cf83ab8053b1c4ffa904342e6b?v=2c15b4cf83ab80eebddb000ca1f45b53&source=copy_link)
 
+
+### 4) FAQ 크롤링
+- **Python + Selenium + Chrome WebDriver를** 활용하여 Mercedes FAQ, Kia FAQ, Hyundai FAQ 페이지 크롤링
+- **F12 개발자 도구**로 **HTML 구조 확인, CSS Selector** 사용하여 질문(header)과 답변(div.toggle) 추출
+- 쿠키 동의 버튼 클릭, **'더보기'** 버튼 클릭 등 동적 페이지 대응
+CSV 파일로 질문/답변 저장, 반복문과 예외 처리로 모든 FAQ 항목 안정적으로 수집
+
+```python
+ # '더보기' 버튼 클릭(div.toggle)
+  try:
+    more_btn = faq.find_element(By.CSS_SELECTOR, "div.toggle")
+    driver.execute_script("arguments[0].click();", more_btn)
+    time.sleep(0.2)
+  except:
+    pass
+```
+
 ---
 
 ## 트러블 슈팅
@@ -407,6 +424,23 @@ mysql -h skn23-1st-4team.cr6u26mg6lbq.eu-north-1.rds.amazonaws.com -u admin -p
   ```
 
 ####  신승훈
+- 동적 웹 페이지 크롤링: **Chrome WebDriver**를 사용하여 버튼 클릭, 탭 이동, **Shadow DOM** 접근 등 사용자 액션을 자동화하였습니다.
+- 쿠키/팝업 처리: 사이트별 쿠키 동의 팝업과 안내창에 대응하여 데이터 누락을 최소화하였습니다.
+- 페이지 로딩 안정성: **Python Selenium**에서 **WebDriverWait**와 명시적 대기를 활용하여 JavaScript 렌더링 후 요소에 안정적으로 접근할 수 있도록 하였습니다. 
+
+프로젝트 진행 중 어려움을 겪었던 이슈는 **브랜드별 FAQ 크롤링**, **페이지 질문/답변 혼합 문제**, **크롤링 속도 문제** 3가지였습니다.
+
+- **브랜드별 FAQ 크롤링**
+- 원인: 페이지 구조 및 문장 형태가 브랜드마다 상이하여 단일 파서로는 데이터를 정확하게 추출하기 
+- 해결: 브랜드별로 파서를 분리하여 맞춤형 크롤링 구현
+
+- **페이지 질문/답변 혼합 문제**
+- 원인: 질문과 답변이 페이지 내 혼합되어 있어 중복 저장과 정확한 분리가 어려움
+- 해결: 질문과 답변을 기준으로 데이터를 분리하고, CSV 파일로 저장하며 중복 방지를 위해 해시(uniq_hash)를 적용
+
+- **크롤링 속도 문제**
+- 원인: 불필요한 반복 액션으로 인해 크롤링 속도가 느려짐
+- 해결: 반복 액션을 최소화하고 CSV 적재 방식을 최적화하여 크롤링 속도를 향상
 
 
 ---
