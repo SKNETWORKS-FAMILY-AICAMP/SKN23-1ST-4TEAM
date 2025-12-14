@@ -1,49 +1,48 @@
 """
-PROJECT_1ST_4TEAM/
+project_1st_4team/
+├── .venv/                         # 가상 환경 (git X )
 │
-├── backend/                         # 백엔드 로직(Repository, DB, Utils) 전체
-│   │
-│   ├── db_main/                     # 모든 DB 테이블 / Repository 함수 모음
-│   │   ├── car_recall.py            # (미사용 가능) 차량 리콜 관련 특수 로직
-│   │   ├── car_repository.py        # 차량 관련 조회 함수 (보유대, 등록 추세 등)
-│   │   ├── common_repository.py     # 공통 코드 (SIDO, 연료, 연령대 등 공통 테이블 조회)
-│   │   ├── dim_tables.py           
-│   │   ├── flow_repository.py       # ‘등록/이전/말소/중고’ 등 차량 흐름 통계 조회
-│   │   ├── owner_repository.py      # 소유자 기준 통계 (성별/연령 등)
-│   │   ├── recall_repository.py     # 리콜 관련 통계 (제조사별, 차종별, 월별 등)
-│   │   │
-│   │   ├── load_fact_*.py           # 각 FACT 테이블 ETL 스크립트 (DB 적재용)
-│   │   └── (엑셀 데이터 모음)        # FACT 테이블 생성에 사용된 원본 엑셀
-│   │
-│   ├── utils/                       # 프로젝트 공통 유틸
-│   │   ├── db_utils.py              # DB 연결, fetch_all_dict(), fetch_dataframe()
-│   │   └── config.py                # DB 접속정보, 공통 설정값
-│   │
-│   ├── main.py                      
+├── backend/                       # 핵심 백엔드/데이터 처리 패키지
+│   ├── db_main/                   # DB 저장/조회 레이어 (Repository)
+│   ├── bmw_faq.py
+│   ├── car_faq.py                 # FAQ DB 저장/조회
+│   ├── car_recall.py
+│   ├── car_repository.py          # 등록/차량 기본정보 DB 레이어
+│   ├── common_repository.py
+│   ├── database.py                # DB 연결 설정
+│   ├── dim_tables.py
+│   ├── flow_repository.py         # 유입/흐름 데이터 저장/조회
+│   ├── kia_faq.py
+│   ├── load_fact_flow_count.py
+│   ├── load_fact_fuel_stock.py
+│   ├── load_fact_owner_demo_stock.py
+│   ├── load_fact_vehicle_stock.py
+│   ├── owner_repository.py
+│   └── recall_repository.py       # 리콜 DB 저장/조회  
 │
-├── crawling/                      
-│   ├── bmw_crawler.py               
-│   └── crawling.py                 
+├── project_crawling/              # 크롤링 스크립트 폴더
+│   ├── benz.py
+│   ├── hyundai.py
+│   └── kia_faq.py
 │
-├── pages/                          
-│   ├── Dashboard.py                
-│   └── ...                         
+├── assets/                        # 정적 파일 모음
+│   ├── car_excel_files/           # 자동차 등록 통계 엑셀 파일
+│   ├── charts/                    # GIS/지도/차트용 shp, prj 파일
+│   ├── fonts/                     # 폰트 파일들
+│   └── images/                    # 화면/ERD/시스템 구성도 이미지
 │
-├── test_car_repo.py                 # 차량 관련 repository 테스트 코드
-├── test_common.py                   # 공통 테이블 조회 테스트
-├── test_db.py                       # DB 연결 테스트
-├── test_flow.py                     # 차량 등록/중고 흐름 테스트
-├── test_owner.py                    # 소유자 통계 테스트
-├── test_recall.py                   # 리콜 관련 테스트
+├── views/                         # Streamlit 멀티 페이지 정의 폴더
+│   ├── Dashboard.py               # 대시보드
+│   ├── CarInfo.py                 # 자동차 정보
+│   ├── CarRegistrationList.py     # 2-1 자동차 등록 현황
+│   ├── RecallList.py              # 2-2 리콜 목록
+│   ├── Map.py                     # 지도 기반 통계
+│   └── FAQ.py                     # FAQ 페이지
 │
-├── user_flow.drawio                 # 기능 흐름 다이어그램
+├── .streamlit/
+│   └── config.toml                # Streamlit UI/Theme 설정
 │
-├── streamlit_app.py                 # Streamlit 메인 실행 파일
-├── requirements.txt                 # 프로젝트 패키지 설치 목록-
-└── README.md                        # 프로젝트 문서 (설명/사용방법) 
+├── streamlit_app.py               # Streamlit 메인 앱 시작 파일
+├── requirements.txt               # 프로젝트 의존성 목록
+└── README.md                      # 프로젝트 문서
 """
-
-
-
-
-
