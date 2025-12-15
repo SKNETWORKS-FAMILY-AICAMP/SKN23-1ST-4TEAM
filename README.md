@@ -197,7 +197,6 @@ project_1st_4team/
 │   ├── car_faq.py                 # FAQ DB 저장/조회
 │   ├── car_recall.py
 │   ├── car_repository.py          # 등록/차량 기본정보 DB 레이어
-│   ├── common_repository.py
 │   ├── database.py                # DB 연결 설정
 │   ├── dim_tables.py
 │   ├── flow_repository.py         # 유입/흐름 데이터 저장/조회
