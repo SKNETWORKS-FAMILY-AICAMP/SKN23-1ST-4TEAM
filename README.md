@@ -193,18 +193,18 @@ project_1st_4team/
 │
 ├── backend/                       # 핵심 백엔드/데이터 처리 패키지
 │   ├── db_main/                   # DB 저장/조회 레이어 (Repository)
-│   ├── bmw_faq.py
+│   ├── bmw_faq.py                 # BMW FAQ 수집/정제 후 DB 저장(Upsert/중복 방지)
 │   ├── car_faq.py                 # FAQ DB 저장/조회
-│   ├── car_recall.py
+│   ├── car_recall.py              # 리콜 데이터 수집/전처리(페이지 파싱/필드 정규화)
 │   ├── car_repository.py          # 등록/차량 기본정보 DB 레이어
 │   ├── database.py                # DB 연결 설정
-│   ├── dim_tables.py
+│   ├── dim_tables.py              # Dim 테이블 생성/초기 기준값(시도/연령/연료 등) 관리
 │   ├── flow_repository.py         # 유입/흐름 데이터 저장/조회
-│   ├── kia_faq.py
-│   ├── load_fact_flow_count.py
-│   ├── load_fact_fuel_stock.py
-│   ├── load_fact_owner_demo_stock.py
-│   ├── load_fact_vehicle_stock.py
+│   ├── kia_faq.py                 # 기아 FAQ 수집/정제 후 DB 저장(질문/답변 분리)
+│   ├── load_fact_flow_count.py       # 엑셀→fact_flow_count 적재(매핑/중복 방지)
+│   ├── load_fact_fuel_stock.py       # 엑셀→fact_fuel_stock 적재(매핑/중복 방지)
+│   ├── load_fact_owner_demo_stock.py # 엑셀→fact_owner_demo_stock 적재(성별/연령 매핑)
+│   ├── load_fact_vehicle_stock.py    # 엑셀→fact_vehicle_stock 적재(차종/용도 매핑)
 │   ├── owner_repository.py
 │   └── recall_repository.py       # 리콜 DB 저장/조회  
 │
