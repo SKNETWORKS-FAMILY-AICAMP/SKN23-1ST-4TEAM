@@ -189,50 +189,49 @@
 ## 프로젝트 구조
 ```
 project_1st_4team/
-├── .venv/                         # 가상 환경 (git X )
+├── .venv/                            # 가상 환경 (git X )
 │
-├── backend/                       # 핵심 백엔드/데이터 처리 패키지
-│   ├── db_main/                   # DB 저장/조회 레이어 (Repository)
-│   ├── bmw_faq.py                 # BMW FAQ 수집/정제 후 DB 저장(Upsert/중복 방지)
-│   ├── car_faq.py                 # FAQ DB 저장/조회
-│   ├── car_recall.py              # 리콜 데이터 수집/전처리(페이지 파싱/필드 정규화)
-│   ├── car_repository.py          # 등록/차량 기본정보 DB 레이어
-│   ├── database.py                # DB 연결 설정
-│   ├── dim_tables.py              # Dim 테이블 생성/초기 기준값(시도/연령/연료 등) 관리
-│   ├── flow_repository.py         # 유입/흐름 데이터 저장/조회
-│   ├── kia_faq.py                 # 기아 FAQ 수집/정제 후 DB 저장(질문/답변 분리)
+├── assets/                           # 정적 파일 모음
+│   ├── car_excel_files/              # 자동차 등록 통계 엑셀 파일
+│   ├── charts/                       # GIS/지도/차트용 shp, prj 파일
+│   ├── fonts/                        # 폰트 파일들
+│   └── images/                       # 화면/ERD/시스템 구성도 이미지
+│
+├── backend/                          # 핵심 백엔드/데이터 처리 패키지
+│   ├── db_main/                      # DB 저장/조회 레이어 (Repository)
+│   ├── bmw_faq.py                    # BMW FAQ 수집/정제 후 DB 저장(Upsert/중복 방지)
+│   ├── car_faq.py                    # FAQ DB 저장/조회
+│   ├── car_recall.py                 # 리콜 데이터 수집/전처리(페이지 파싱/필드 정규화)
+│   ├── car_repository.py             # 등록/차량 기본정보 DB 레이어
+│   ├── database.py                   # DB 연결 설정
+│   ├── dim_tables.py                 # Dim 테이블 생성/초기 기준값(시도/연령/연료 등) 관리
+│   ├── flow_repository.py            # 유입/흐름 데이터 저장/조회
+│   ├── kia_faq.py                    # 기아 FAQ 수집/정제 후 DB 저장(질문/답변 분리)
 │   ├── load_fact_flow_count.py       # 엑셀→fact_flow_count 적재(매핑/중복 방지)
 │   ├── load_fact_fuel_stock.py       # 엑셀→fact_fuel_stock 적재(매핑/중복 방지)
 │   ├── load_fact_owner_demo_stock.py # 엑셀→fact_owner_demo_stock 적재(성별/연령 매핑)
 │   ├── load_fact_vehicle_stock.py    # 엑셀→fact_vehicle_stock 적재(차종/용도 매핑)
-│   ├── owner_repository.py
-│   └── recall_repository.py       # 리콜 DB 저장/조회  
+│   └── recall_repository.py          # 리콜 DB 저장/조회  
 │
-├── project_crawling/              # 크롤링 스크립트 폴더 모음
-│   ├── benz.py                    # 더보기 버튼 클릭 처리
-│   ├── hyundai.py                # 페이지별 FAQ 항목 반복 추출
-│   └── kia_faq.py                 # 질문/답변 추출 및 CSV 저장
+├── project_crawling/                 # 크롤링 스크립트 폴더 모음
+│   ├── benz.py                       # 더보기 버튼 클릭 처리
+│   ├── hyundai.py                    # 페이지별 FAQ 항목 반복 추출
+│   └── kia_faq.py                    # 질문/답변 추출 및 CSV 저장
 │
-├── assets/                        # 정적 파일 모음
-│   ├── car_excel_files/           # 자동차 등록 통계 엑셀 파일
-│   ├── charts/                    # GIS/지도/차트용 shp, prj 파일
-│   ├── fonts/                     # 폰트 파일들
-│   └── images/                    # 화면/ERD/시스템 구성도 이미지
+├── views/                            # Streamlit 멀티 페이지 정의 폴더
+│   ├── .streamlit/
+│   │     └── config.toml             # Streamlit Theme 설정
+│   ├── Dashboard.py                  # 대시보드
+│   ├── CarInfo.py                    # 자동차 정보
+│   ├── CarRegistrationList.py        # 2-1 자동차 등록 현황
+│   ├── RecallList.py                 # 2-2 리콜 목록
+│   ├── Map.py                        # 위도,경도 데이터 기반 geoJson 생성
+│   └── FAQ.py                        # FAQ 페이지
 │
-├── views/                         # Streamlit 멀티 페이지 정의 폴더
-│   ├── Dashboard.py               # 대시보드
-│   ├── CarInfo.py                 # 자동차 정보
-│   ├── CarRegistrationList.py     # 2-1 자동차 등록 현황
-│   ├── RecallList.py              # 2-2 리콜 목록
-│   ├── Map.py                     # 지도 기반 통계
-│   └── FAQ.py                     # FAQ 페이지
-│
-├── .streamlit/
-│   └── config.toml                # Streamlit UI/Theme 설정
-│
-├── streamlit_app.py               # Streamlit 메인 앱 시작 파일
-├── requirements.txt               # 프로젝트 의존성 목록
-└── README.md                      # 프로젝트 문서
+├── user_flow.drawio                  # 화면흐름도 drawio 파일
+├── streamlit_app.py                  # Streamlit 메인 앱 시작 파일
+├── requirements.txt                  # 프로젝트 의존성 목록
+└── README.md                         # 프로젝트 문서
 ```
 ## 모듈 구조/명세서
 
