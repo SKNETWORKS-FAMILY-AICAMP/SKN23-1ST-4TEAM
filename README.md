@@ -184,6 +184,27 @@
 <img src="assets\images\db server2.jpg">
 <img src="assets\images\db server3.jpg">
 
+
+### 로컬 데이터 베이스 서버 생성 방법
+
+1. db_dump.sql 파일 이용
+
+```
+mysql -u root -p < db_dump.sql
+```
+
+2. 스키마&시드 파일 이용
+```
+./migrate.sh
+
+또는
+
+mysql -u root -p < assets/db/schema.sql
+mysql -u root -p < assets/db/seed.sql
+```
+./migrate.sh 실행 시
+DB가 초기화되며 모든 데이터가 삭제됩니다.
+
 ---
 
 ## 프로젝트 구조
@@ -194,6 +215,7 @@ project_1st_4team/
 ├── assets/                           # 정적 파일 모음
 │   ├── car_excel_files/              # 자동차 등록 통계 엑셀 파일
 │   ├── charts/                       # GIS/지도/차트용 shp, prj 파일
+│   ├── db/                           # db 스키마 & 시드 파일
 │   ├── fonts/                        # 폰트 파일들
 │   └── images/                       # 화면/ERD/시스템 구성도 이미지
 │
@@ -228,6 +250,7 @@ project_1st_4team/
 │   ├── Map.py                        # 위도,경도 데이터 기반 geoJson 생성
 │   └── FAQ.py                        # FAQ 페이지
 │
+├── db_dump.sql                       # database 덤프 파일
 ├── user_flow.drawio                  # 화면흐름도 drawio 파일
 ├── streamlit_app.py                  # Streamlit 메인 앱 시작 파일
 ├── requirements.txt                  # 프로젝트 의존성 목록
