@@ -185,32 +185,84 @@
 <img src="assets\images\db server3.jpg">
 
 
-### AWS RDS(MySQL) → Local MySQL 이전/복원 (Dump 기반)
+AWS RDS(MySQL) → Local MySQL 이전/복원 (Dump 기반)
 
-#### 1. 로컬 MySQL로 복원(Import) (로컬 CMD 또는 PowerShell)
-```bat
-cd <DUMP_DIR>
+[목표]
+AWS RDS(MySQL)에 있는 SKN23 데이터베이스를 덤프(.sql)로 추출한 뒤,
+로컬 MySQL에 복원하고 DBeaver로 확인한다.
+
+────────────────────────────────────────
+[준비물]
+- 로컬 MySQL 설치 + CLI 사용 가능
+  - 확인: mysql --version
+- (선택) DBeaver 설치(데이터 확인용)
+- EC2 접속용 PEM 키 파일: D:\SKN.pem
+- EC2 Host: ec2-13-61-174-247.eu-north-1.compute.amazonaws.com
+- RDS Endpoint: skn23-1st-4team.cr6u26mg6lbq.eu-north-1.rds.amazonaws.com
+- DB명: SKN23
+────────────────────────────────────────
+
+[1] EC2 접속 (로컬 PC에서 실행: PowerShell 또는 Git Bash)
+ssh -i "D:\SKN.pem" ec2-user@ec2-13-61-174-247.eu-north-1.compute.amazonaws.com
+
+[2] RDS 접속 및 DB 확인 (EC2에서 실행)
+mysql -h skn23-1st-4team.cr6u26mg6lbq.eu-north-1.rds.amazonaws.com -u admin -p -e "SHOW DATABASES;"
+- 출력에 SKN23가 보이면 정상
+
+[3] RDS → 덤프 파일 생성 (EC2에서 실행)
+DB="SKN23"
+HOST="skn23-1st-4team.cr6u26mg6lbq.eu-north-1.rds.amazonaws.com"
+USER="admin"
+FILE="${DB}_dump_$(date +%F).sql"
+
+mysqldump -h "$HOST" -u "$USER" -p \
+  --databases "$DB" \
+  --single-transaction \
+  --routines --triggers --events \
+  --default-character-set=utf8mb4 \
+  --no-tablespaces \
+  --set-gtid-purged=OFF \
+  --column-statistics=0 \
+  > "$FILE"
+
+[4] 덤프 파일 확인 + 압축 (EC2에서 실행)
+ls -lh "$FILE"
+gzip -9 "$FILE"
+ls -lh "${FILE}.gz"
+
+[5] 덤프 파일을 로컬로 다운로드 (로컬 PC PowerShell에서 실행)
+mkdir C:\Users\seung\Desktop\AWS_dump -Force
+scp -i "D:\SKN.pem" ec2-user@ec2-13-61-174-247.eu-north-1.compute.amazonaws.com:~/SKN23_dump_*.sql.gz C:\Users\seung\Desktop\AWS_dump\
+
+[6] 로컬에서 압축 해제 (Git Bash 권장)
+cd /c/Users/seung/Desktop/AWS_dump
+gzip -d SKN23_dump_*.sql.gz
+ls -lh SKN23_dump_*.sql
+
+[7] 로컬 MySQL로 복원(Import) (로컬 CMD 또는 PowerShell)
+cd C:\Users\seung\Desktop\AWS_dump
 mysql -u root -p < "SKN23_dump_2026-01-22.sql"
-```
-- 파일명이 다르면 `"SKN23_dump_YYYY-MM-DD.sql"` 부분만 실제 파일명으로 변경합니다.
+- 파일명이 다르면 "SKN23_dump_YYYY-MM-DD.sql" 부분만 실제 파일명으로 변경
 
-#### 2. 복원 확인 (로컬 CMD 또는 PowerShell)
-```bat
+[8] 복원 확인 (로컬 CMD 또는 PowerShell)
 mysql -u root -p -e "SHOW DATABASES;"
 mysql -u root -p -D skn23 -e "SHOW TABLES;"
-```
 
-#### 3. DBeaver로 로컬 DB 확인(선택)
-- MySQL Connection  
-  - Host: `localhost` / Port: `3306` / User: `root` / Database: `skn23`
+[9] DBeaver로 로컬 DB 확인(선택)
+- MySQL Connection
+  Host: localhost
+  Port: 3306
+  User: root
+  Password: (로컬 비밀번호)
+  Database/Schema: skn23
 
-- 오류: `Public Key Retrieval is not allowed`  
+- 오류: Public Key Retrieval is not allowed
   해결: DBeaver 연결(Edit Connection) → Driver properties
-  - `allowPublicKeyRetrieval = true`
-  - `useSSL = false`
+    allowPublicKeyRetrieval = true
+    useSSL = false
 
-**주의**  
-- `./migrate.sh` 실행 시 DB가 초기화될 수 있으며, 모든 데이터가 삭제될 수 있습니다.
+[주의]
+- ./migrate.sh 실행 시 DB가 초기화될 수 있으며, 모든 데이터가 삭제될 수 있다.
 
 ---
 
