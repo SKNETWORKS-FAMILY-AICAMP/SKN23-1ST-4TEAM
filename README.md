@@ -187,84 +187,20 @@
 
 ### AWS RDS(MySQL) → Local MySQL 이전/복원 (Dump 기반)
 
-**목표**  
-AWS RDS(MySQL)에 있는 `SKN23` 데이터베이스를 덤프(.sql)로 추출한 뒤, 로컬 MySQL에 복원하고 DBeaver로 확인합니다.
-
----
-
-#### 확인사항
-- 로컬 MySQL 설치 + CLI 사용 가능  
-  - 확인: `mysql --version`
-- EC2 접속용 PEM 키 파일: `<PEM_PATH>`
-- EC2 Host: `<EC2_HOST>`
-- RDS Endpoint: `<RDS_ENDPOINT>`
-- DB명: `SKN23`
-
----
-
-#### 1. EC2 접속 (로컬 PC에서 실행: PowerShell 또는 Git Bash)
-```bash
-ssh -i "<PEM_PATH>" ec2-user@<EC2_HOST>
-```
-
-#### 2. RDS 접속 및 DB 확인 (EC2에서 실행)
-```bash
-mysql -h <RDS_ENDPOINT> -u admin -p -e "SHOW DATABASES;"
-```
-- 출력에 `SKN23`가 보이면 정상입니다.
-
-#### 3. RDS → 덤프 파일 생성 (EC2에서 실행)
-```bash
-DB="SKN23"
-HOST="<RDS_ENDPOINT>"
-USER="admin"
-FILE="${DB}_dump_$(date +%F).sql"
-
-mysqldump -h "$HOST" -u "$USER" -p \
-  --databases "$DB" \
-  --single-transaction \
-  --routines --triggers --events \
-  --default-character-set=utf8mb4 \
-  --no-tablespaces \
-  --set-gtid-purged=OFF \
-  --column-statistics=0 \
-  > "$FILE"
-```
-
-#### 4. 덤프 파일 확인 + 압축 (EC2에서 실행)
-```bash
-ls -lh "$FILE"
-gzip -9 "$FILE"
-ls -lh "${FILE}.gz"
-```
-
-#### 5. 덤프 파일을 로컬로 다운로드 (로컬 PC PowerShell에서 실행)
-```powershell
-mkdir <DUMP_DIR> -Force
-scp -i "<PEM_PATH>" ec2-user@<EC2_HOST>:~/SKN23_dump_*.sql.gz <DUMP_DIR>\
-```
-
-#### 6. 로컬에서 압축 해제 (Git Bash 권장)
-```bash
-cd <DUMP_DIR_GITBASH>
-gzip -d SKN23_dump_*.sql.gz
-ls -lh SKN23_dump_*.sql
-```
-
-#### 7. 로컬 MySQL로 복원(Import) (로컬 CMD 또는 PowerShell)
+#### 1. 로컬 MySQL로 복원(Import) (로컬 CMD 또는 PowerShell)
 ```bat
 cd <DUMP_DIR>
 mysql -u root -p < "SKN23_dump_2026-01-22.sql"
 ```
 - 파일명이 다르면 `"SKN23_dump_YYYY-MM-DD.sql"` 부분만 실제 파일명으로 변경합니다.
 
-#### 8. 복원 확인 (로컬 CMD 또는 PowerShell)
+#### 2. 복원 확인 (로컬 CMD 또는 PowerShell)
 ```bat
 mysql -u root -p -e "SHOW DATABASES;"
 mysql -u root -p -D skn23 -e "SHOW TABLES;"
 ```
 
-#### 9. DBeaver로 로컬 DB 확인(선택)
+#### 3. DBeaver로 로컬 DB 확인(선택)
 - MySQL Connection  
   - Host: `localhost` / Port: `3306` / User: `root` / Database: `skn23`
 
